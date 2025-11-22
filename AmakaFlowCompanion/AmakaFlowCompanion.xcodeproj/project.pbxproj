@@ -1,0 +1,1239 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		F84E22182ED0B62000459747 /* AmakaFlowWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = F84E22172ED0B62000459747 /* AmakaFlowWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F84E226F2ED0D55600459747 /* AmakaFlowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E226D2ED0D55600459747 /* AmakaFlowApp.swift */; };
+		F84E22702ED0D55600459747 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E226E2ED0D55600459747 /* Theme.swift */; };
+		F84E22722ED0D56C00459747 /* Workout.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E22712ED0D56C00459747 /* Workout.swift */; };
+		F84E22742ED0D58300459747 /* WorkoutsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E22732ED0D58300459747 /* WorkoutsViewModel.swift */; };
+		F84E22782ED0D59B00459747 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E22752ED0D59B00459747 /* SettingsView.swift */; };
+		F84E22792ED0D59B00459747 /* WorkoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E22762ED0D59B00459747 /* WorkoutDetailView.swift */; };
+		F84E227A2ED0D59B00459747 /* WorkoutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E22772ED0D59B00459747 /* WorkoutsView.swift */; };
+		F84E227E2ED0D5BF00459747 /* IntervalRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E227B2ED0D5BF00459747 /* IntervalRow.swift */; };
+		F84E227F2ED0D5BF00459747 /* ScheduleCalendarSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E227C2ED0D5BF00459747 /* ScheduleCalendarSheet.swift */; };
+		F84E22802ED0D5BF00459747 /* WorkoutCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E227D2ED0D5BF00459747 /* WorkoutCard.swift */; };
+		F84E22862ED0D5D100459747 /* WorkoutKitConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E22852ED0D5D100459747 /* WorkoutKitConverter.swift */; };
+		F84E22872ED0D5D100459747 /* CalendarManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E22832ED0D5D100459747 /* CalendarManager.swift */; };
+		F84E22882ED0D5D100459747 /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E22842ED0D5D100459747 /* WatchConnectivityManager.swift */; };
+		F84E22892ED0D5D100459747 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E22812ED0D5D100459747 /* APIService.swift */; };
+		F84E228A2ED0D5D100459747 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E22822ED0D5D100459747 /* AuthService.swift */; };
+		F84E22932ED0D9FA00459747 /* EventKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F84E22922ED0D9FA00459747 /* EventKit.framework */; };
+		F84E22952ED0DA0200459747 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F84E22942ED0DA0200459747 /* HealthKit.framework */; };
+		F84E22972ED0DA0F00459747 /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F84E22962ED0DA0F00459747 /* WatchConnectivity.framework */; };
+		F84E22992ED0DA1F00459747 /* WorkoutKitSync in Frameworks */ = {isa = PBXBuildFile; productRef = F84E22982ED0DA1F00459747 /* WorkoutKitSync */; };
+		F84E229B2ED0DC0900459747 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F84E229A2ED0DC0900459747 /* HealthKit.framework */; };
+		F84E229D2ED0DC1100459747 /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F84E229C2ED0DC1100459747 /* WatchConnectivity.framework */; };
+		F84E229F2ED0DC1B00459747 /* WorkoutKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F84E229E2ED0DC1B00459747 /* WorkoutKit.framework */; };
+		F84E22A12ED0DC2700459747 /* WorkoutKitSync in Frameworks */ = {isa = PBXBuildFile; productRef = F84E22A02ED0DC2700459747 /* WorkoutKitSync */; };
+		F84E22A32ED0E1BB00459747 /* Workout.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E22712ED0D56C00459747 /* Workout.swift */; };
+		F84E22A42ED0E68300459747 /* WorkoutKitConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E22852ED0D5D100459747 /* WorkoutKitConverter.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		F84E21842ED0B0CA00459747 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F84E216C2ED0B0C800459747 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F84E21732ED0B0C800459747;
+			remoteInfo = AmakaFlowCompanion;
+		};
+		F84E218E2ED0B0CA00459747 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F84E216C2ED0B0C800459747 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F84E21732ED0B0C800459747;
+			remoteInfo = AmakaFlowCompanion;
+		};
+		F84E22192ED0B62000459747 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F84E216C2ED0B0C800459747 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F84E22162ED0B62000459747;
+			remoteInfo = "AmakaFlowWatch Watch App";
+		};
+		F84E22272ED0B62100459747 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F84E216C2ED0B0C800459747 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F84E22162ED0B62000459747;
+			remoteInfo = "AmakaFlowWatch Watch App";
+		};
+		F84E22312ED0B62100459747 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F84E216C2ED0B0C800459747 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F84E22162ED0B62000459747;
+			remoteInfo = "AmakaFlowWatch Watch App";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F84E223A2ED0B62100459747 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				F84E22182ED0B62000459747 /* AmakaFlowWatch Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		F84E21742ED0B0C800459747 /* AmakaFlowCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AmakaFlowCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F84E21832ED0B0CA00459747 /* AmakaFlowCompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AmakaFlowCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F84E218D2ED0B0CA00459747 /* AmakaFlowCompanionUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AmakaFlowCompanionUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F84E22122ED0B62000459747 /* AmakaFlowWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AmakaFlowWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F84E22172ED0B62000459747 /* AmakaFlowWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AmakaFlowWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F84E22262ED0B62100459747 /* AmakaFlowWatch Watch AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "AmakaFlowWatch Watch AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F84E22302ED0B62100459747 /* AmakaFlowWatch Watch AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "AmakaFlowWatch Watch AppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F84E226D2ED0D55600459747 /* AmakaFlowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmakaFlowApp.swift; path = ../AmakaFlow/AmakaFlowApp.swift; sourceTree = SOURCE_ROOT; };
+		F84E226E2ED0D55600459747 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Theme.swift; path = ../AmakaFlow/Theme.swift; sourceTree = SOURCE_ROOT; };
+		F84E22712ED0D56C00459747 /* Workout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Workout.swift; path = ../AmakaFlow/Models/Workout.swift; sourceTree = SOURCE_ROOT; };
+		F84E22732ED0D58300459747 /* WorkoutsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WorkoutsViewModel.swift; path = ../AmakaFlow/ViewModels/WorkoutsViewModel.swift; sourceTree = SOURCE_ROOT; };
+		F84E22752ED0D59B00459747 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SettingsView.swift; path = ../AmakaFlow/Views/SettingsView.swift; sourceTree = SOURCE_ROOT; };
+		F84E22762ED0D59B00459747 /* WorkoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WorkoutDetailView.swift; path = ../AmakaFlow/Views/WorkoutDetailView.swift; sourceTree = SOURCE_ROOT; };
+		F84E22772ED0D59B00459747 /* WorkoutsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WorkoutsView.swift; path = ../AmakaFlow/Views/WorkoutsView.swift; sourceTree = SOURCE_ROOT; };
+		F84E227B2ED0D5BF00459747 /* IntervalRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IntervalRow.swift; path = ../AmakaFlow/Views/Components/IntervalRow.swift; sourceTree = SOURCE_ROOT; };
+		F84E227C2ED0D5BF00459747 /* ScheduleCalendarSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ScheduleCalendarSheet.swift; path = ../AmakaFlow/Views/Components/ScheduleCalendarSheet.swift; sourceTree = SOURCE_ROOT; };
+		F84E227D2ED0D5BF00459747 /* WorkoutCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WorkoutCard.swift; path = ../AmakaFlow/Views/Components/WorkoutCard.swift; sourceTree = SOURCE_ROOT; };
+		F84E22812ED0D5D100459747 /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = APIService.swift; path = ../AmakaFlow/Services/APIService.swift; sourceTree = SOURCE_ROOT; };
+		F84E22822ED0D5D100459747 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AuthService.swift; path = ../AmakaFlow/Services/AuthService.swift; sourceTree = SOURCE_ROOT; };
+		F84E22832ED0D5D100459747 /* CalendarManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CalendarManager.swift; path = ../AmakaFlow/Services/CalendarManager.swift; sourceTree = SOURCE_ROOT; };
+		F84E22842ED0D5D100459747 /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WatchConnectivityManager.swift; path = ../AmakaFlow/Services/WatchConnectivityManager.swift; sourceTree = SOURCE_ROOT; };
+		F84E22852ED0D5D100459747 /* WorkoutKitConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WorkoutKitConverter.swift; path = ../AmakaFlow/Services/WorkoutKitConverter.swift; sourceTree = SOURCE_ROOT; };
+		F84E22922ED0D9FA00459747 /* EventKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EventKit.framework; path = System/Library/Frameworks/EventKit.framework; sourceTree = SDKROOT; };
+		F84E22942ED0DA0200459747 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
+		F84E22962ED0DA0F00459747 /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = System/Library/Frameworks/WatchConnectivity.framework; sourceTree = SDKROOT; };
+		F84E229A2ED0DC0900459747 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS26.1.sdk/System/Library/Frameworks/HealthKit.framework; sourceTree = DEVELOPER_DIR; };
+		F84E229C2ED0DC1100459747 /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS26.1.sdk/System/Library/Frameworks/WatchConnectivity.framework; sourceTree = DEVELOPER_DIR; };
+		F84E229E2ED0DC1B00459747 /* WorkoutKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WorkoutKit.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS26.1.sdk/System/Library/Frameworks/WorkoutKit.framework; sourceTree = DEVELOPER_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F84E22622ED0BCE900459747 /* Exceptions for "AmakaFlowCompanion" folder in "AmakaFlowCompanion" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = F84E21732ED0B0C800459747 /* AmakaFlowCompanion */;
+		};
+		F84E22A22ED0DF9300459747 /* Exceptions for "AmakaFlowWatch Watch App" folder in "AmakaFlowWatch Watch App" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = F84E22162ED0B62000459747 /* AmakaFlowWatch Watch App */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		F84E226A2ED0CF5900459747 /* Exceptions for "AmakaFlowWatch Watch App" folder in "Copy Bundle Resources" phase from "AmakaFlowWatch" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = F84E22102ED0B62000459747 /* Resources */;
+			membershipExceptions = (
+				AmakFlowWatch.entitlements,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		F84E21762ED0B0C800459747 /* AmakaFlowCompanion */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F84E22622ED0BCE900459747 /* Exceptions for "AmakaFlowCompanion" folder in "AmakaFlowCompanion" target */,
+			);
+			path = AmakaFlowCompanion;
+			sourceTree = "<group>";
+		};
+		F84E21862ED0B0CA00459747 /* AmakaFlowCompanionTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AmakaFlowCompanionTests;
+			sourceTree = "<group>";
+		};
+		F84E21902ED0B0CA00459747 /* AmakaFlowCompanionUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AmakaFlowCompanionUITests;
+			sourceTree = "<group>";
+		};
+		F84E221B2ED0B62000459747 /* AmakaFlowWatch Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F84E226A2ED0CF5900459747 /* Exceptions for "AmakaFlowWatch Watch App" folder in "Copy Bundle Resources" phase from "AmakaFlowWatch" target */,
+				F84E22A22ED0DF9300459747 /* Exceptions for "AmakaFlowWatch Watch App" folder in "AmakaFlowWatch Watch App" target */,
+			);
+			path = "AmakaFlowWatch Watch App";
+			sourceTree = "<group>";
+		};
+		F84E22292ED0B62100459747 /* AmakaFlowWatch Watch AppTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "AmakaFlowWatch Watch AppTests";
+			sourceTree = "<group>";
+		};
+		F84E22332ED0B62100459747 /* AmakaFlowWatch Watch AppUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "AmakaFlowWatch Watch AppUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F84E21712ED0B0C800459747 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F84E22932ED0D9FA00459747 /* EventKit.framework in Frameworks */,
+				F84E22952ED0DA0200459747 /* HealthKit.framework in Frameworks */,
+				F84E22992ED0DA1F00459747 /* WorkoutKitSync in Frameworks */,
+				F84E22972ED0DA0F00459747 /* WatchConnectivity.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E21802ED0B0CA00459747 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E218A2ED0B0CA00459747 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E22142ED0B62000459747 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F84E229F2ED0DC1B00459747 /* WorkoutKit.framework in Frameworks */,
+				F84E229B2ED0DC0900459747 /* HealthKit.framework in Frameworks */,
+				F84E22A12ED0DC2700459747 /* WorkoutKitSync in Frameworks */,
+				F84E229D2ED0DC1100459747 /* WatchConnectivity.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E22232ED0B62100459747 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E222D2ED0B62100459747 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		F84E216B2ED0B0C800459747 = {
+			isa = PBXGroup;
+			children = (
+				F84E22812ED0D5D100459747 /* APIService.swift */,
+				F84E22822ED0D5D100459747 /* AuthService.swift */,
+				F84E22832ED0D5D100459747 /* CalendarManager.swift */,
+				F84E22842ED0D5D100459747 /* WatchConnectivityManager.swift */,
+				F84E22852ED0D5D100459747 /* WorkoutKitConverter.swift */,
+				F84E227B2ED0D5BF00459747 /* IntervalRow.swift */,
+				F84E227C2ED0D5BF00459747 /* ScheduleCalendarSheet.swift */,
+				F84E227D2ED0D5BF00459747 /* WorkoutCard.swift */,
+				F84E22752ED0D59B00459747 /* SettingsView.swift */,
+				F84E22762ED0D59B00459747 /* WorkoutDetailView.swift */,
+				F84E22772ED0D59B00459747 /* WorkoutsView.swift */,
+				F84E22732ED0D58300459747 /* WorkoutsViewModel.swift */,
+				F84E22712ED0D56C00459747 /* Workout.swift */,
+				F84E226D2ED0D55600459747 /* AmakaFlowApp.swift */,
+				F84E226E2ED0D55600459747 /* Theme.swift */,
+				F84E21762ED0B0C800459747 /* AmakaFlowCompanion */,
+				F84E21862ED0B0CA00459747 /* AmakaFlowCompanionTests */,
+				F84E21902ED0B0CA00459747 /* AmakaFlowCompanionUITests */,
+				F84E221B2ED0B62000459747 /* AmakaFlowWatch Watch App */,
+				F84E22292ED0B62100459747 /* AmakaFlowWatch Watch AppTests */,
+				F84E22332ED0B62100459747 /* AmakaFlowWatch Watch AppUITests */,
+				F84E22912ED0D9FA00459747 /* Frameworks */,
+				F84E21752ED0B0C800459747 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F84E21752ED0B0C800459747 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F84E21742ED0B0C800459747 /* AmakaFlowCompanion.app */,
+				F84E21832ED0B0CA00459747 /* AmakaFlowCompanionTests.xctest */,
+				F84E218D2ED0B0CA00459747 /* AmakaFlowCompanionUITests.xctest */,
+				F84E22122ED0B62000459747 /* AmakaFlowWatch.app */,
+				F84E22172ED0B62000459747 /* AmakaFlowWatch Watch App.app */,
+				F84E22262ED0B62100459747 /* AmakaFlowWatch Watch AppTests.xctest */,
+				F84E22302ED0B62100459747 /* AmakaFlowWatch Watch AppUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F84E22912ED0D9FA00459747 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F84E229E2ED0DC1B00459747 /* WorkoutKit.framework */,
+				F84E229C2ED0DC1100459747 /* WatchConnectivity.framework */,
+				F84E229A2ED0DC0900459747 /* HealthKit.framework */,
+				F84E22962ED0DA0F00459747 /* WatchConnectivity.framework */,
+				F84E22942ED0DA0200459747 /* HealthKit.framework */,
+				F84E22922ED0D9FA00459747 /* EventKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F84E21732ED0B0C800459747 /* AmakaFlowCompanion */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F84E21972ED0B0CA00459747 /* Build configuration list for PBXNativeTarget "AmakaFlowCompanion" */;
+			buildPhases = (
+				F84E21702ED0B0C800459747 /* Sources */,
+				F84E21712ED0B0C800459747 /* Frameworks */,
+				F84E21722ED0B0C800459747 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				F84E21762ED0B0C800459747 /* AmakaFlowCompanion */,
+			);
+			name = AmakaFlowCompanion;
+			packageProductDependencies = (
+				F84E22982ED0DA1F00459747 /* WorkoutKitSync */,
+			);
+			productName = AmakaFlowCompanion;
+			productReference = F84E21742ED0B0C800459747 /* AmakaFlowCompanion.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F84E21822ED0B0CA00459747 /* AmakaFlowCompanionTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F84E219A2ED0B0CA00459747 /* Build configuration list for PBXNativeTarget "AmakaFlowCompanionTests" */;
+			buildPhases = (
+				F84E217F2ED0B0CA00459747 /* Sources */,
+				F84E21802ED0B0CA00459747 /* Frameworks */,
+				F84E21812ED0B0CA00459747 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F84E21852ED0B0CA00459747 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F84E21862ED0B0CA00459747 /* AmakaFlowCompanionTests */,
+			);
+			name = AmakaFlowCompanionTests;
+			packageProductDependencies = (
+			);
+			productName = AmakaFlowCompanionTests;
+			productReference = F84E21832ED0B0CA00459747 /* AmakaFlowCompanionTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		F84E218C2ED0B0CA00459747 /* AmakaFlowCompanionUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F84E219D2ED0B0CA00459747 /* Build configuration list for PBXNativeTarget "AmakaFlowCompanionUITests" */;
+			buildPhases = (
+				F84E21892ED0B0CA00459747 /* Sources */,
+				F84E218A2ED0B0CA00459747 /* Frameworks */,
+				F84E218B2ED0B0CA00459747 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F84E218F2ED0B0CA00459747 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F84E21902ED0B0CA00459747 /* AmakaFlowCompanionUITests */,
+			);
+			name = AmakaFlowCompanionUITests;
+			packageProductDependencies = (
+			);
+			productName = AmakaFlowCompanionUITests;
+			productReference = F84E218D2ED0B0CA00459747 /* AmakaFlowCompanionUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		F84E22112ED0B62000459747 /* AmakaFlowWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F84E22422ED0B62100459747 /* Build configuration list for PBXNativeTarget "AmakaFlowWatch" */;
+			buildPhases = (
+				F84E22102ED0B62000459747 /* Resources */,
+				F84E223A2ED0B62100459747 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F84E221A2ED0B62000459747 /* PBXTargetDependency */,
+			);
+			name = AmakaFlowWatch;
+			packageProductDependencies = (
+			);
+			productName = AmakaFlowWatch;
+			productReference = F84E22122ED0B62000459747 /* AmakaFlowWatch.app */;
+			productType = "com.apple.product-type.application.watchapp2-container";
+		};
+		F84E22162ED0B62000459747 /* AmakaFlowWatch Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F84E22412ED0B62100459747 /* Build configuration list for PBXNativeTarget "AmakaFlowWatch Watch App" */;
+			buildPhases = (
+				F84E22132ED0B62000459747 /* Sources */,
+				F84E22142ED0B62000459747 /* Frameworks */,
+				F84E22152ED0B62000459747 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				F84E221B2ED0B62000459747 /* AmakaFlowWatch Watch App */,
+			);
+			name = "AmakaFlowWatch Watch App";
+			packageProductDependencies = (
+				F84E22A02ED0DC2700459747 /* WorkoutKitSync */,
+			);
+			productName = "AmakaFlowWatch Watch App";
+			productReference = F84E22172ED0B62000459747 /* AmakaFlowWatch Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F84E22252ED0B62100459747 /* AmakaFlowWatch Watch AppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F84E22432ED0B62100459747 /* Build configuration list for PBXNativeTarget "AmakaFlowWatch Watch AppTests" */;
+			buildPhases = (
+				F84E22222ED0B62100459747 /* Sources */,
+				F84E22232ED0B62100459747 /* Frameworks */,
+				F84E22242ED0B62100459747 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F84E22282ED0B62100459747 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F84E22292ED0B62100459747 /* AmakaFlowWatch Watch AppTests */,
+			);
+			name = "AmakaFlowWatch Watch AppTests";
+			packageProductDependencies = (
+			);
+			productName = "AmakaFlowWatch Watch AppTests";
+			productReference = F84E22262ED0B62100459747 /* AmakaFlowWatch Watch AppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		F84E222F2ED0B62100459747 /* AmakaFlowWatch Watch AppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F84E22442ED0B62100459747 /* Build configuration list for PBXNativeTarget "AmakaFlowWatch Watch AppUITests" */;
+			buildPhases = (
+				F84E222C2ED0B62100459747 /* Sources */,
+				F84E222D2ED0B62100459747 /* Frameworks */,
+				F84E222E2ED0B62100459747 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F84E22322ED0B62100459747 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F84E22332ED0B62100459747 /* AmakaFlowWatch Watch AppUITests */,
+			);
+			name = "AmakaFlowWatch Watch AppUITests";
+			packageProductDependencies = (
+			);
+			productName = "AmakaFlowWatch Watch AppUITests";
+			productReference = F84E22302ED0B62100459747 /* AmakaFlowWatch Watch AppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F84E216C2ED0B0C800459747 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2610;
+				LastUpgradeCheck = 1720;
+				TargetAttributes = {
+					F84E21732ED0B0C800459747 = {
+						CreatedOnToolsVersion = 17.2.0;
+					};
+					F84E21822ED0B0CA00459747 = {
+						CreatedOnToolsVersion = 17.2.0;
+						TestTargetID = F84E21732ED0B0C800459747;
+					};
+					F84E218C2ED0B0CA00459747 = {
+						CreatedOnToolsVersion = 17.2.0;
+						TestTargetID = F84E21732ED0B0C800459747;
+					};
+					F84E22112ED0B62000459747 = {
+						CreatedOnToolsVersion = 26.1.1;
+					};
+					F84E22162ED0B62000459747 = {
+						CreatedOnToolsVersion = 26.1.1;
+					};
+					F84E22252ED0B62100459747 = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = F84E22162ED0B62000459747;
+					};
+					F84E222F2ED0B62100459747 = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = F84E22162ED0B62000459747;
+					};
+				};
+			};
+			buildConfigurationList = F84E216F2ED0B0C800459747 /* Build configuration list for PBXProject "AmakaFlowCompanion" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = F84E216B2ED0B0C800459747;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F84E225F2ED0B84300459747 /* XCLocalSwiftPackageReference "../../../workoutkit-sync" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = F84E21752ED0B0C800459747 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F84E21732ED0B0C800459747 /* AmakaFlowCompanion */,
+				F84E21822ED0B0CA00459747 /* AmakaFlowCompanionTests */,
+				F84E218C2ED0B0CA00459747 /* AmakaFlowCompanionUITests */,
+				F84E22112ED0B62000459747 /* AmakaFlowWatch */,
+				F84E22162ED0B62000459747 /* AmakaFlowWatch Watch App */,
+				F84E22252ED0B62100459747 /* AmakaFlowWatch Watch AppTests */,
+				F84E222F2ED0B62100459747 /* AmakaFlowWatch Watch AppUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F84E21722ED0B0C800459747 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E21812ED0B0CA00459747 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E218B2ED0B0CA00459747 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E22102ED0B62000459747 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E22152ED0B62000459747 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E22242ED0B62100459747 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E222E2ED0B62100459747 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F84E21702ED0B0C800459747 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F84E22782ED0D59B00459747 /* SettingsView.swift in Sources */,
+				F84E22792ED0D59B00459747 /* WorkoutDetailView.swift in Sources */,
+				F84E227A2ED0D59B00459747 /* WorkoutsView.swift in Sources */,
+				F84E22742ED0D58300459747 /* WorkoutsViewModel.swift in Sources */,
+				F84E226F2ED0D55600459747 /* AmakaFlowApp.swift in Sources */,
+				F84E22862ED0D5D100459747 /* WorkoutKitConverter.swift in Sources */,
+				F84E22872ED0D5D100459747 /* CalendarManager.swift in Sources */,
+				F84E22882ED0D5D100459747 /* WatchConnectivityManager.swift in Sources */,
+				F84E22892ED0D5D100459747 /* APIService.swift in Sources */,
+				F84E228A2ED0D5D100459747 /* AuthService.swift in Sources */,
+				F84E227E2ED0D5BF00459747 /* IntervalRow.swift in Sources */,
+				F84E227F2ED0D5BF00459747 /* ScheduleCalendarSheet.swift in Sources */,
+				F84E22802ED0D5BF00459747 /* WorkoutCard.swift in Sources */,
+				F84E22702ED0D55600459747 /* Theme.swift in Sources */,
+				F84E22722ED0D56C00459747 /* Workout.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E217F2ED0B0CA00459747 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E21892ED0B0CA00459747 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E22132ED0B62000459747 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F84E22A32ED0E1BB00459747 /* Workout.swift in Sources */,
+				F84E22A42ED0E68300459747 /* WorkoutKitConverter.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E22222ED0B62100459747 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F84E222C2ED0B62100459747 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		F84E21852ED0B0CA00459747 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F84E21732ED0B0C800459747 /* AmakaFlowCompanion */;
+			targetProxy = F84E21842ED0B0CA00459747 /* PBXContainerItemProxy */;
+		};
+		F84E218F2ED0B0CA00459747 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F84E21732ED0B0C800459747 /* AmakaFlowCompanion */;
+			targetProxy = F84E218E2ED0B0CA00459747 /* PBXContainerItemProxy */;
+		};
+		F84E221A2ED0B62000459747 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F84E22162ED0B62000459747 /* AmakaFlowWatch Watch App */;
+			targetProxy = F84E22192ED0B62000459747 /* PBXContainerItemProxy */;
+		};
+		F84E22282ED0B62100459747 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F84E22162ED0B62000459747 /* AmakaFlowWatch Watch App */;
+			targetProxy = F84E22272ED0B62100459747 /* PBXContainerItemProxy */;
+		};
+		F84E22322ED0B62100459747 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F84E22162ED0B62000459747 /* AmakaFlowWatch Watch App */;
+			targetProxy = F84E22312ED0B62100459747 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		F84E21952ED0B0CA00459747 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		F84E21962ED0B0CA00459747 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		F84E21982ED0B0CA00459747 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AmakaFlowCompanion/AmakaFlowCompanion.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AmakaFlowCompanion/Info.plist;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "AmakaFlow Companion needs access to read your workout data";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "     AmakaFlow Companion needs access to save your completed workouts";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.myamaka.AmakaFlowCompanion;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F84E21992ED0B0CA00459747 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AmakaFlowCompanion/AmakaFlowCompanion.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AmakaFlowCompanion/Info.plist;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "AmakaFlow Companion needs access to read your workout data";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "     AmakaFlow Companion needs access to save your completed workouts";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.myamaka.AmakaFlowCompanion;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		F84E219B2ED0B0CA00459747 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.myamaka.AmakaFlowCompanionTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AmakaFlowCompanion.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AmakaFlowCompanion";
+			};
+			name = Debug;
+		};
+		F84E219C2ED0B0CA00459747 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.myamaka.AmakaFlowCompanionTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AmakaFlowCompanion.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AmakaFlowCompanion";
+			};
+			name = Release;
+		};
+		F84E219E2ED0B0CA00459747 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.myamaka.AmakaFlowCompanionUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = AmakaFlowCompanion;
+			};
+			name = Debug;
+		};
+		F84E219F2ED0B0CA00459747 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.myamaka.AmakaFlowCompanionUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = AmakaFlowCompanion;
+			};
+			name = Release;
+		};
+		F84E22382ED0B62100459747 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "";
+				"CODE_SIGN_ENTITLEMENTS[sdk=*]" = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				INFOPLIST_KEY_CFBundleDisplayName = AmakaFlowWatch;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.myamaka.AmakaFlowWatch;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		F84E22392ED0B62100459747 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "";
+				"CODE_SIGN_ENTITLEMENTS[sdk=*]" = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				INFOPLIST_KEY_CFBundleDisplayName = AmakaFlowWatch;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.myamaka.AmakaFlowWatch;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		F84E223B2ED0B62100459747 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "AmakaFlowWatch Watch App/AmakFlowWatch.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "AmakaFlowWatch Watch App/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = AmakaFlowWatch;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.myamaka.AmakaFlowWatch.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 11.6;
+			};
+			name = Debug;
+		};
+		F84E223C2ED0B62100459747 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "AmakaFlowWatch Watch App/AmakFlowWatch.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "AmakaFlowWatch Watch App/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = AmakaFlowWatch;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.myamaka.AmakaFlowWatch.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 11.6;
+			};
+			name = Release;
+		};
+		F84E223D2ED0B62100459747 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.myamaka.AmakaFlowWatch-Watch-AppTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AmakaFlowWatch Watch App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AmakaFlowWatch Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+			};
+			name = Debug;
+		};
+		F84E223E2ED0B62100459747 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.myamaka.AmakaFlowWatch-Watch-AppTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AmakaFlowWatch Watch App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AmakaFlowWatch Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+			};
+			name = Release;
+		};
+		F84E223F2ED0B62100459747 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.myamaka.AmakaFlowWatch-Watch-AppUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = "AmakaFlowWatch Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+			};
+			name = Debug;
+		};
+		F84E22402ED0B62100459747 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = A9K5QG6YW8;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.myamaka.AmakaFlowWatch-Watch-AppUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = "AmakaFlowWatch Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F84E216F2ED0B0C800459747 /* Build configuration list for PBXProject "AmakaFlowCompanion" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F84E21952ED0B0CA00459747 /* Debug */,
+				F84E21962ED0B0CA00459747 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F84E21972ED0B0CA00459747 /* Build configuration list for PBXNativeTarget "AmakaFlowCompanion" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F84E21982ED0B0CA00459747 /* Debug */,
+				F84E21992ED0B0CA00459747 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F84E219A2ED0B0CA00459747 /* Build configuration list for PBXNativeTarget "AmakaFlowCompanionTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F84E219B2ED0B0CA00459747 /* Debug */,
+				F84E219C2ED0B0CA00459747 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F84E219D2ED0B0CA00459747 /* Build configuration list for PBXNativeTarget "AmakaFlowCompanionUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F84E219E2ED0B0CA00459747 /* Debug */,
+				F84E219F2ED0B0CA00459747 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F84E22412ED0B62100459747 /* Build configuration list for PBXNativeTarget "AmakaFlowWatch Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F84E223B2ED0B62100459747 /* Debug */,
+				F84E223C2ED0B62100459747 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F84E22422ED0B62100459747 /* Build configuration list for PBXNativeTarget "AmakaFlowWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F84E22382ED0B62100459747 /* Debug */,
+				F84E22392ED0B62100459747 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F84E22432ED0B62100459747 /* Build configuration list for PBXNativeTarget "AmakaFlowWatch Watch AppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F84E223D2ED0B62100459747 /* Debug */,
+				F84E223E2ED0B62100459747 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F84E22442ED0B62100459747 /* Build configuration list for PBXNativeTarget "AmakaFlowWatch Watch AppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F84E223F2ED0B62100459747 /* Debug */,
+				F84E22402ED0B62100459747 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		F84E225F2ED0B84300459747 /* XCLocalSwiftPackageReference "../../../workoutkit-sync" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../../workoutkit-sync";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F84E22982ED0DA1F00459747 /* WorkoutKitSync */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F84E225F2ED0B84300459747 /* XCLocalSwiftPackageReference "../../../workoutkit-sync" */;
+			productName = WorkoutKitSync;
+		};
+		F84E22A02ED0DC2700459747 /* WorkoutKitSync */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F84E225F2ED0B84300459747 /* XCLocalSwiftPackageReference "../../../workoutkit-sync" */;
+			productName = WorkoutKitSync;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = F84E216C2ED0B0C800459747 /* Project object */;
+}
