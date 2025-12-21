@@ -5,12 +5,12 @@
 //  Widget bundle for workout Live Activity
 //
 
-import SwiftUI
 import WidgetKit
+import SwiftUI
 
 @main
 struct WorkoutLiveActivityBundle: WidgetBundle {
     var body: some Widget {
-        WorkoutLiveActivity()
+        WorkoutLiveActivityLiveActivity()
     }
 }
