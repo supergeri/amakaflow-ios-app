@@ -13,6 +13,7 @@ struct WorkoutPlayerView: View {
 
     @State private var showEndConfirmation = false
     @State private var showStepList = false
+    @State private var deviceMode: DevicePreference = .phoneOnly
 
     var body: some View {
         ZStack {
@@ -24,8 +25,17 @@ struct WorkoutPlayerView: View {
                 header
 
                 // Main content
-                if engine.phase == .ended {
-                    completionView
+                if engine.phase == .ended, let workout = engine.workout {
+                    WorkoutCompleteView(
+                        workout: workout,
+                        elapsedTime: engine.elapsedSeconds,
+                        deviceMode: deviceMode,
+                        calories: nil,
+                        avgHeartRate: nil,
+                        onClose: { dismiss() },
+                        onShare: nil,
+                        onViewInHealth: nil
+                    )
                 } else {
                     ScrollView {
                         VStack(spacing: Theme.Spacing.lg) {
@@ -168,62 +178,6 @@ struct WorkoutPlayerView: View {
         .frame(width: 120)
         .background(Theme.Colors.surface)
         .cornerRadius(Theme.CornerRadius.sm)
-    }
-
-    // MARK: - Completion View
-
-    private var completionView: some View {
-        VStack(spacing: Theme.Spacing.xl) {
-            Spacer()
-
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 80))
-                .foregroundColor(Theme.Colors.accentGreen)
-
-            Text("Workout Complete!")
-                .font(Theme.Typography.title1)
-                .foregroundColor(Theme.Colors.textPrimary)
-
-            Text("Great job finishing \(engine.workout?.name ?? "your workout")!")
-                .font(Theme.Typography.body)
-                .foregroundColor(Theme.Colors.textSecondary)
-                .multilineTextAlignment(.center)
-
-            // Stats
-            HStack(spacing: Theme.Spacing.xl) {
-                statItem(value: engine.formattedElapsedTime, label: "Duration")
-                statItem(value: "\(engine.totalSteps)", label: "Steps")
-            }
-
-            Spacer()
-
-            Button {
-                dismiss()
-            } label: {
-                Text("Done")
-                    .font(Theme.Typography.bodyBold)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Theme.Spacing.md)
-                    .background(Theme.Colors.accentBlue)
-                    .cornerRadius(Theme.CornerRadius.md)
-            }
-            .padding(.horizontal, Theme.Spacing.lg)
-        }
-        .padding(Theme.Spacing.lg)
-    }
-
-    private func statItem(value: String, label: String) -> some View {
-        VStack(spacing: Theme.Spacing.xs) {
-            Text(value)
-                .font(Theme.Typography.title2)
-                .foregroundColor(Theme.Colors.textPrimary)
-                .monospacedDigit()
-
-            Text(label)
-                .font(Theme.Typography.caption)
-                .foregroundColor(Theme.Colors.textTertiary)
-        }
     }
 
     // MARK: - Step List Sheet

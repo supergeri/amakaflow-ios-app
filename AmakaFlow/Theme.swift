@@ -24,6 +24,11 @@ struct Theme {
         static let accentBlue = Color(hex: "3A8BFF")
         static let accentGreen = Color(hex: "4EDF9B")
         static let accentRed = Color(hex: "EF4444")
+        static let accentOrange = Color(hex: "F97316")
+
+        // Device brand colors
+        static let garminBlue = Color(hex: "007ACC")
+        static let amazfitOrange = Color(hex: "FF6B00")
         
         // Borders
         static let borderLight = Color(hex: "2D2D32")
