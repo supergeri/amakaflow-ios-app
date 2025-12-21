@@ -15,8 +15,10 @@ struct WorkoutDetailView: View {
 
     @State private var showingCalendarSheet = false
     @State private var showingWorkoutPlayer = false
+    @State private var showingDeviceSheet = false
     @State private var watchSent = false
     @State private var calendarScheduled = false
+    @State private var selectedDevice: DevicePreference = .phoneOnly
     
     var body: some View {
         NavigationStack {
@@ -66,8 +68,7 @@ struct WorkoutDetailView: View {
                     VStack(spacing: 12) {
                         // Start on Phone (Follow-Along)
                         Button(action: {
-                            WorkoutEngine.shared.start(workout: workout)
-                            showingWorkoutPlayer = true
+                            showingDeviceSheet = true
                         }) {
                             HStack(spacing: 8) {
                                 Image(systemName: "play.fill")
@@ -266,6 +267,29 @@ struct WorkoutDetailView: View {
                         }
                     }
                 )
+            }
+            .sheet(isPresented: $showingDeviceSheet) {
+                PreWorkoutDeviceSheet(
+                    workout: workout,
+                    appleWatchConnected: WatchConnectivityManager.shared.isWatchReachable,
+                    garminConnected: false,
+                    amazfitConnected: false,
+                    onSelectDevice: { device in
+                        selectedDevice = device
+                        showingDeviceSheet = false
+                        WorkoutEngine.shared.start(workout: workout)
+                        showingWorkoutPlayer = true
+                    },
+                    onClose: {
+                        showingDeviceSheet = false
+                    },
+                    onChangeSettings: {
+                        showingDeviceSheet = false
+                        // TODO: Navigate to settings
+                    }
+                )
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
             }
             .fullScreenCover(isPresented: $showingWorkoutPlayer) {
                 WorkoutPlayerView()
