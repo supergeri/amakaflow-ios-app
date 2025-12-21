@@ -1,0 +1,568 @@
+//
+//  CalendarView.swift
+//  AmakaFlow
+//
+//  Calendar screen with week strip and upcoming workouts
+//
+
+import SwiftUI
+
+struct CalendarView: View {
+    @EnvironmentObject var viewModel: WorkoutsViewModel
+    @State private var currentDate = Date()
+    @State private var selectedDate: Date?
+    @State private var selectedWorkout: Workout?
+    @State private var showingMonthPicker = false
+
+    let onAddWorkout: () -> Void
+
+    private let calendar = Calendar.current
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Month navigation
+                monthNavigation
+                    .padding(.horizontal, Theme.Spacing.lg)
+                    .padding(.vertical, Theme.Spacing.md)
+
+                // Week strip
+                weekStrip
+                    .padding(.horizontal, Theme.Spacing.lg)
+                    .padding(.bottom, Theme.Spacing.lg)
+
+                // Upcoming workouts list
+                ScrollView {
+                    VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+                        Text("Upcoming Workouts")
+                            .font(Theme.Typography.title2)
+                            .foregroundColor(Theme.Colors.textPrimary)
+
+                        if upcomingWorkouts.isEmpty {
+                            emptyState
+                        } else {
+                            ForEach(upcomingWorkouts) { workout in
+                                CalendarWorkoutRow(workout: workout) {
+                                    selectedWorkout = workout
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, Theme.Spacing.lg)
+                    .padding(.bottom, 100)
+                }
+            }
+            .background(Theme.Colors.background.ignoresSafeArea())
+            .navigationTitle("Calendar")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    HStack(spacing: Theme.Spacing.sm) {
+                        // Month picker button
+                        Button {
+                            showingMonthPicker = true
+                        } label: {
+                            Image(systemName: "calendar")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(Theme.Colors.textPrimary)
+                                .frame(width: 36, height: 36)
+                                .background(Theme.Colors.surface)
+                                .cornerRadius(Theme.CornerRadius.md)
+                        }
+                        .buttonStyle(.plain)
+
+                        // Add button - navigates to Workouts to select workout
+                        Button {
+                            onAddWorkout()
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(width: 36, height: 36)
+                                .background(Theme.Colors.accentBlue)
+                                .cornerRadius(Theme.CornerRadius.md)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .fullScreenCover(isPresented: $showingMonthPicker) {
+                FullMonthPickerView(
+                    selectedDate: currentDate,
+                    onSelectDate: { date in
+                        currentDate = date
+                        showingMonthPicker = false
+                    },
+                    onCancel: {
+                        showingMonthPicker = false
+                    }
+                )
+            }
+            .sheet(item: $selectedWorkout) { workout in
+                WorkoutDetailView(workout: workout)
+            }
+            .sheet(isPresented: showingDayDetail) {
+                if let date = selectedDate {
+                    dayDetailSheet(for: date)
+                }
+            }
+        }
+    }
+
+    // MARK: - Month Navigation
+
+    private var monthNavigation: some View {
+        HStack {
+            Button {
+                goToPreviousWeek()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(Theme.Colors.textPrimary)
+                    .frame(width: 40, height: 40)
+                    .background(Theme.Colors.surface)
+                    .cornerRadius(Theme.CornerRadius.md)
+            }
+
+            Spacer()
+
+            Text(monthYearString)
+                .font(Theme.Typography.title2)
+                .foregroundColor(Theme.Colors.textPrimary)
+
+            Spacer()
+
+            Button {
+                goToNextWeek()
+            } label: {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(Theme.Colors.textPrimary)
+                    .frame(width: 40, height: 40)
+                    .background(Theme.Colors.surface)
+                    .cornerRadius(Theme.CornerRadius.md)
+            }
+        }
+    }
+
+    // MARK: - Week Strip
+
+    private var weekStrip: some View {
+        HStack(spacing: Theme.Spacing.xs) {
+            ForEach(weekDates, id: \.self) { date in
+                weekDayCell(for: date)
+            }
+        }
+    }
+
+    private func weekDayCell(for date: Date) -> some View {
+        let isToday = calendar.isDateInToday(date)
+        let workoutsForDay = workouts(for: date)
+
+        return Button {
+            selectedDate = date
+        } label: {
+            VStack(spacing: Theme.Spacing.xs) {
+                Text(dayName(for: date))
+                    .font(Theme.Typography.footnote)
+                    .foregroundColor(isToday ? .white : Theme.Colors.textSecondary)
+
+                Text("\(calendar.component(.day, from: date))")
+                    .font(Theme.Typography.bodyBold)
+                    .foregroundColor(isToday ? .white : Theme.Colors.textPrimary)
+
+                // Workout dots
+                if !workoutsForDay.isEmpty {
+                    HStack(spacing: 2) {
+                        ForEach(workoutsForDay.prefix(3)) { workout in
+                            Circle()
+                                .fill(isToday ? .white : sportColor(for: workout.sport))
+                                .frame(width: 6, height: 6)
+                        }
+                    }
+                } else {
+                    Spacer()
+                        .frame(height: 6)
+                }
+            }
+            .padding(.vertical, Theme.Spacing.sm)
+            .frame(maxWidth: .infinity)
+            .background(isToday ? Theme.Colors.accentBlue : Theme.Colors.surface)
+            .cornerRadius(Theme.CornerRadius.lg)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Empty State
+
+    private var emptyState: some View {
+        VStack(spacing: Theme.Spacing.md) {
+            Text("No scheduled workouts")
+                .font(Theme.Typography.body)
+                .foregroundColor(Theme.Colors.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, Theme.Spacing.xl)
+        .background(Theme.Colors.surface)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.CornerRadius.lg)
+                .stroke(Theme.Colors.borderLight, lineWidth: 1)
+        )
+        .cornerRadius(Theme.CornerRadius.lg)
+    }
+
+    // MARK: - Day Detail Sheet
+
+    private var showingDayDetail: Binding<Bool> {
+        Binding(
+            get: { selectedDate != nil },
+            set: { if !$0 { selectedDate = nil } }
+        )
+    }
+
+    private func dayDetailSheet(for date: Date) -> some View {
+        let workoutsForDay = workouts(for: date)
+
+        return NavigationStack {
+            VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+                if workoutsForDay.isEmpty {
+                    VStack(spacing: Theme.Spacing.md) {
+                        Text("No workouts scheduled for this day")
+                            .font(Theme.Typography.body)
+                            .foregroundColor(Theme.Colors.textSecondary)
+
+                        Button {
+                            selectedDate = nil
+                            onAddWorkout()
+                        } label: {
+                            Text("Add Workout")
+                                .font(Theme.Typography.bodyBold)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, Theme.Spacing.lg)
+                                .padding(.vertical, Theme.Spacing.sm)
+                                .background(Theme.Colors.accentBlue)
+                                .cornerRadius(Theme.CornerRadius.md)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Theme.Spacing.xl)
+                } else {
+                    ScrollView {
+                        VStack(spacing: Theme.Spacing.sm) {
+                            ForEach(workoutsForDay) { workout in
+                                CalendarWorkoutRow(workout: workout) {
+                                    selectedDate = nil
+                                    selectedWorkout = workout
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(Theme.Spacing.lg)
+            .background(Theme.Colors.surface.ignoresSafeArea())
+            .navigationTitle(dateString(for: date))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        selectedDate = nil
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+
+    // MARK: - Helpers
+
+    private var weekDates: [Date] {
+        let startOfWeek = calendar.date(
+            from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: currentDate)
+        )!
+        return (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: startOfWeek) }
+    }
+
+    private var monthYearString: String {
+        currentDate.formatted(.dateTime.month(.wide).year())
+    }
+
+    private func dayName(for date: Date) -> String {
+        date.formatted(.dateTime.weekday(.abbreviated))
+    }
+
+    private func dateString(for date: Date) -> String {
+        date.formatted(.dateTime.weekday(.wide).month(.wide).day())
+    }
+
+    private func goToPreviousWeek() {
+        if let newDate = calendar.date(byAdding: .weekOfYear, value: -1, to: currentDate) {
+            currentDate = newDate
+        }
+    }
+
+    private func goToNextWeek() {
+        if let newDate = calendar.date(byAdding: .weekOfYear, value: 1, to: currentDate) {
+            currentDate = newDate
+        }
+    }
+
+    private func workouts(for date: Date) -> [Workout] {
+        // For now, return all workouts as we don't have scheduling yet
+        // In a real app, filter by scheduled date
+        viewModel.incomingWorkouts
+    }
+
+    private var upcomingWorkouts: [Workout] {
+        viewModel.incomingWorkouts
+    }
+
+    private func sportColor(for sport: WorkoutSport) -> Color {
+        switch sport {
+        case .running: return Theme.Colors.accentGreen
+        case .strength: return Theme.Colors.accentBlue
+        case .mobility: return Color(hex: "9333EA")
+        default: return Theme.Colors.accentBlue
+        }
+    }
+}
+
+// MARK: - Calendar Workout Row
+
+private struct CalendarWorkoutRow: View {
+    let workout: Workout
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: Theme.Spacing.md) {
+                // Date & Time
+                VStack(spacing: Theme.Spacing.xs) {
+                    Text("Today")
+                        .font(Theme.Typography.footnote)
+                        .foregroundColor(Theme.Colors.textSecondary)
+
+                    Text("9:00")
+                        .font(Theme.Typography.bodyBold)
+                        .foregroundColor(Theme.Colors.textPrimary)
+                }
+                .frame(width: 60)
+
+                // Divider
+                Rectangle()
+                    .fill(Theme.Colors.borderLight)
+                    .frame(width: 1)
+
+                // Workout Info
+                VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                    HStack(spacing: Theme.Spacing.sm) {
+                        Circle()
+                            .fill(sportColor)
+                            .frame(width: 8, height: 8)
+
+                        Text(workout.name)
+                            .font(Theme.Typography.bodyBold)
+                            .foregroundColor(Theme.Colors.textPrimary)
+                            .lineLimit(1)
+                    }
+
+                    Text(workout.formattedDuration)
+                        .font(Theme.Typography.caption)
+                        .foregroundColor(Theme.Colors.textSecondary)
+
+                    HStack(spacing: Theme.Spacing.sm) {
+                        Text(workout.sport.rawValue.capitalized)
+                            .font(Theme.Typography.footnote)
+                            .foregroundColor(Theme.Colors.textSecondary)
+                            .padding(.horizontal, Theme.Spacing.sm)
+                            .padding(.vertical, 2)
+                            .background(Theme.Colors.surfaceElevated)
+                            .cornerRadius(Theme.CornerRadius.sm)
+
+                        Text("Synced")
+                            .font(Theme.Typography.footnote)
+                            .foregroundColor(Theme.Colors.accentGreen)
+                            .padding(.horizontal, Theme.Spacing.sm)
+                            .padding(.vertical, 2)
+                            .background(Theme.Colors.accentGreen.opacity(0.1))
+                            .cornerRadius(Theme.CornerRadius.sm)
+                    }
+                }
+
+                Spacer()
+            }
+            .padding(Theme.Spacing.md)
+            .background(Theme.Colors.surface)
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.CornerRadius.lg)
+                    .stroke(Theme.Colors.borderLight, lineWidth: 1)
+            )
+            .cornerRadius(Theme.CornerRadius.lg)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var sportColor: Color {
+        switch workout.sport {
+        case .running: return Theme.Colors.accentGreen
+        case .strength: return Theme.Colors.accentBlue
+        case .mobility: return Color(hex: "9333EA")
+        default: return Theme.Colors.accentBlue
+        }
+    }
+}
+
+// MARK: - Full Month Picker View
+
+private struct FullMonthPickerView: View {
+    let selectedDate: Date
+    let onSelectDate: (Date) -> Void
+    let onCancel: () -> Void
+
+    @State private var viewDate: Date
+    private let calendar = Calendar.current
+
+    init(selectedDate: Date, onSelectDate: @escaping (Date) -> Void, onCancel: @escaping () -> Void) {
+        self.selectedDate = selectedDate
+        self.onSelectDate = onSelectDate
+        self.onCancel = onCancel
+        self._viewDate = State(initialValue: selectedDate)
+    }
+
+    // Generate months: 3 months back, 12 months forward
+    private var months: [Date] {
+        let current = Date()
+        return (-3..<12).compactMap { offset in
+            calendar.date(byAdding: .month, value: offset, to: current)
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: Theme.Spacing.lg) {
+                        ForEach(months, id: \.self) { month in
+                            MonthGridView(
+                                month: month,
+                                selectedDate: selectedDate,
+                                onSelectDate: onSelectDate
+                            )
+                            .id(month)
+                        }
+                    }
+                    .padding(.horizontal, Theme.Spacing.lg)
+                    .padding(.vertical, Theme.Spacing.md)
+                }
+                .onAppear {
+                    // Scroll to current month
+                    if let currentMonth = months.first(where: { calendar.isDate($0, equalTo: selectedDate, toGranularity: .month) }) {
+                        proxy.scrollTo(currentMonth, anchor: .top)
+                    }
+                }
+            }
+            .background(Theme.Colors.background.ignoresSafeArea())
+            .navigationTitle(viewDate.formatted(.dateTime.month(.wide).year()))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel") {
+                        onCancel()
+                    }
+                    .foregroundColor(Theme.Colors.textSecondary)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Today") {
+                        onSelectDate(Date())
+                    }
+                    .foregroundColor(Theme.Colors.accentBlue)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Month Grid View
+
+private struct MonthGridView: View {
+    let month: Date
+    let selectedDate: Date
+    let onSelectDate: (Date) -> Void
+
+    private let calendar = Calendar.current
+    private let weekdays = ["M", "T", "W", "T", "F", "S", "S"]
+
+    private var daysInMonth: [Date] {
+        guard let range = calendar.range(of: .day, in: .month, for: month) else { return [] }
+        return range.compactMap { day in
+            calendar.date(bySetting: .day, value: day, of: month)
+        }
+    }
+
+    private var firstWeekdayOffset: Int {
+        guard let firstDay = daysInMonth.first else { return 0 }
+        let weekday = calendar.component(.weekday, from: firstDay)
+        // Convert Sunday (1) to 6, Monday (2) to 0, etc.
+        return weekday == 1 ? 6 : weekday - 2
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+            // Month header
+            Text(month.formatted(.dateTime.month(.wide).year()))
+                .font(Theme.Typography.caption)
+                .foregroundColor(Theme.Colors.textSecondary)
+
+            // Weekday headers
+            HStack(spacing: 0) {
+                ForEach(weekdays, id: \.self) { day in
+                    Text(day)
+                        .font(Theme.Typography.footnote)
+                        .foregroundColor(Theme.Colors.textSecondary)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+
+            // Day grid
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 4) {
+                // Empty cells for offset
+                ForEach(0..<firstWeekdayOffset, id: \.self) { _ in
+                    Color.clear
+                        .frame(height: 40)
+                }
+
+                // Day cells
+                ForEach(daysInMonth, id: \.self) { day in
+                    let isSelected = calendar.isDate(day, inSameDayAs: selectedDate)
+                    let isToday = calendar.isDateInToday(day)
+
+                    Button {
+                        onSelectDate(day)
+                    } label: {
+                        Text("\(calendar.component(.day, from: day))")
+                            .font(Theme.Typography.body)
+                            .foregroundColor(isSelected ? .white : Theme.Colors.textPrimary)
+                            .frame(width: 40, height: 40)
+                            .background(
+                                Circle()
+                                    .fill(isSelected ? Theme.Colors.accentBlue : Color.clear)
+                            )
+                            .overlay(
+                                Circle()
+                                    .stroke(isToday && !isSelected ? Theme.Colors.accentBlue : Color.clear, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Preview
+
+#Preview {
+    CalendarView(onAddWorkout: {})
+        .environmentObject(WorkoutsViewModel())
+        .preferredColorScheme(.dark)
+}
