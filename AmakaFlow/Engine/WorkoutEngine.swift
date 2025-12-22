@@ -76,6 +76,13 @@ class WorkoutEngine: ObservableObject {
         self.phase = .running
         self.stateVersion += 1
 
+        print("🏋️ Starting workout: \(workout.name)")
+        print("🏋️ Intervals count: \(workout.intervals.count)")
+        print("🏋️ Flattened steps count: \(flattenedSteps.count)")
+        if let first = flattenedSteps.first {
+            print("🏋️ First step: \(first.label), timerSeconds: \(first.timerSeconds ?? -1)")
+        }
+
         setupCurrentStep()
         broadcastState()
         audioCueManager.announceWorkoutStart(workout.name)
@@ -119,7 +126,9 @@ class WorkoutEngine: ObservableObject {
     }
 
     func nextStep() {
+        print("🏋️ nextStep() called. currentStepIndex: \(currentStepIndex), flattenedSteps.count: \(flattenedSteps.count)")
         guard currentStepIndex < flattenedSteps.count - 1 else {
+            print("🏋️ No more steps! Ending workout.")
             end(reason: .completed)
             return
         }
@@ -149,6 +158,10 @@ class WorkoutEngine: ObservableObject {
     }
 
     func end(reason: EndReason) {
+        print("🏋️ END called with reason: \(reason)")
+        print("🏋️ currentStepIndex: \(currentStepIndex), flattenedSteps.count: \(flattenedSteps.count)")
+        Thread.callStackSymbols.prefix(10).forEach { print("🏋️ \($0)") }
+
         timer?.invalidate()
         timer = nil
         phase = .ended
@@ -166,9 +179,15 @@ class WorkoutEngine: ObservableObject {
 
         endBackgroundTask()
 
-        // Cleanup after brief delay
+        // Cleanup after brief delay - but only if still in ended state
+        // (a new workout might have started in the meantime)
+        let endedVersion = stateVersion
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
-            self?.reset()
+            guard let self = self else { return }
+            // Only reset if no new workout started
+            if self.stateVersion == endedVersion && self.phase == .ended {
+                self.reset()
+            }
         }
     }
 
@@ -188,7 +207,12 @@ class WorkoutEngine: ObservableObject {
         timer?.invalidate()
         timer = nil
 
-        guard let step = currentStep else { return }
+        guard let step = currentStep else {
+            print("🏋️ setupCurrentStep: No current step! Index: \(currentStepIndex)")
+            return
+        }
+
+        print("🏋️ setupCurrentStep: \(step.label), timerSeconds: \(step.timerSeconds ?? -1), stepType: \(step.stepType)")
 
         // Announce step
         audioCueManager.announceStep(step.label, roundInfo: step.roundInfo)
@@ -198,9 +222,11 @@ class WorkoutEngine: ObservableObject {
             remainingSeconds = seconds
             if phase == .running {
                 startTimer()
+                print("🏋️ Timer started with \(seconds) seconds")
             }
         } else {
             remainingSeconds = 0
+            print("🏋️ No timer for this step (reps/distance)")
         }
     }
 

@@ -66,14 +66,30 @@ final class LiveActivityManager {
         initialState: WorkoutActivityAttributes.ContentState
     ) {
         // Check if Live Activities are enabled
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
-            print("🔴 Live Activities not enabled")
+        let authInfo = ActivityAuthorizationInfo()
+        print("🔵 Live Activities authorization:")
+        print("   - areActivitiesEnabled: \(authInfo.areActivitiesEnabled)")
+        print("   - frequentPushesEnabled: \(authInfo.frequentPushesEnabled)")
+
+        guard authInfo.areActivitiesEnabled else {
+            print("🔴 Live Activities NOT enabled - enable in Settings → AmakaFlow → Live Activities")
             return
         }
 
-        // End any existing activity first
-        Task {
-            await endActivity()
+        // List all existing activities for debugging
+        let existingActivities = Activity<WorkoutActivityAttributes>.activities
+        print("🔵 Existing activities count: \(existingActivities.count)")
+        for activity in existingActivities {
+            print("   - Activity ID: \(activity.id), state: \(activity.activityState)")
+        }
+
+        // End any existing activity synchronously before starting new one
+        if let existing = currentActivity {
+            print("🔵 Ending existing activity: \(existing.id)")
+            Task {
+                await existing.end(nil, dismissalPolicy: .immediate)
+            }
+            currentActivity = nil
         }
 
         let attributes = WorkoutActivityAttributes(
@@ -86,15 +102,25 @@ final class LiveActivityManager {
             staleDate: nil
         )
 
+        print("🔵 Requesting new Live Activity for workout: \(workoutName)")
+        print("🔵 Initial state: step=\(initialState.stepName), phase=\(initialState.phase)")
+
         do {
             currentActivity = try Activity.request(
                 attributes: attributes,
                 content: content,
                 pushType: nil  // Local updates only
             )
-            print("🟢 Live Activity started: \(currentActivity?.id ?? "unknown")")
+            print("🟢 Live Activity started successfully!")
+            print("   - Activity ID: \(currentActivity?.id ?? "unknown")")
+            print("   - Activity state: \(String(describing: currentActivity?.activityState))")
+
+            // Verify it's in the activities list
+            let allActivities = Activity<WorkoutActivityAttributes>.activities
+            print("🔵 Total activities after start: \(allActivities.count)")
         } catch {
             print("🔴 Failed to start Live Activity: \(error)")
+            print("🔴 Error details: \(String(describing: error))")
         }
     }
 

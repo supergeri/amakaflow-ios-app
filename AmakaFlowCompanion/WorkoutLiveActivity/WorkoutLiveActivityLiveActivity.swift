@@ -4,50 +4,13 @@
 //
 //  Live Activity UI for Dynamic Island and Lock Screen
 //
+//  NOTE: WorkoutActivityAttributes is imported from the shared file
+//  that is added to both the main app and widget extension targets.
+//
 
 import ActivityKit
 import WidgetKit
 import SwiftUI
-
-// MARK: - Shared Attributes (must match main app)
-
-struct WorkoutActivityAttributes: ActivityAttributes {
-    public struct ContentState: Codable, Hashable {
-        var phase: String              // "running", "paused", "ended"
-        var stepName: String           // "Squat", "Rest", "Warm Up"
-        var stepIndex: Int             // Current step (1-based for display)
-        var stepCount: Int             // Total steps
-        var remainingSeconds: Int      // Countdown (0 if reps-based)
-        var stepType: String           // "timed", "reps", "distance"
-        var roundInfo: String?         // "Round 2/4" if in repeat block
-    }
-
-    var workoutId: String
-    var workoutName: String
-}
-
-// MARK: - ContentState Helpers
-
-extension WorkoutActivityAttributes.ContentState {
-    var formattedTime: String {
-        let minutes = remainingSeconds / 60
-        let seconds = remainingSeconds % 60
-        return String(format: "%d:%02d", minutes, seconds)
-    }
-
-    var progressPercent: Double {
-        guard stepCount > 0 else { return 0 }
-        return Double(stepIndex) / Double(stepCount)
-    }
-
-    var isTimedStep: Bool {
-        stepType == "timed"
-    }
-
-    var isPaused: Bool {
-        phase == "paused"
-    }
-}
 
 // MARK: - Live Activity Widget
 
