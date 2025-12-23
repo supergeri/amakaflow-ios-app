@@ -3,41 +3,22 @@
 //  AmakaFlowWatch Watch App
 //
 //  State models for receiving workout state from iPhone
+//  Uses shared WorkoutConnectivityModels for compatibility
 //
 
 import Foundation
 
-// MARK: - Workout Phase
+// MARK: - Type Aliases for Watch-side naming
 
-enum WatchWorkoutPhase: String, Codable {
-    case idle
-    case running
-    case paused
-    case ended
-}
+typealias WatchWorkoutState = WorkoutState
+typealias WatchWorkoutPhase = WorkoutPhase
+typealias WatchStepType = StepType
+typealias WatchRemoteCommand = RemoteCommand
+typealias WatchCommandStatus = CommandStatus
 
-// MARK: - Step Type
+// MARK: - Watch-specific Extensions
 
-enum WatchStepType: String, Codable {
-    case timed
-    case reps
-    case distance
-}
-
-// MARK: - Workout State (received from iPhone)
-
-struct WatchWorkoutState: Codable {
-    let stateVersion: Int
-    let workoutId: String
-    let workoutName: String
-    let phase: WatchWorkoutPhase
-    let stepIndex: Int
-    let stepCount: Int
-    let stepName: String
-    let stepType: WatchStepType
-    let remainingMs: Int?
-    let roundInfo: String?
-
+extension WorkoutState {
     var formattedTime: String {
         guard let ms = remainingMs else { return "--:--" }
         let totalSeconds = ms / 1000
@@ -62,21 +43,4 @@ struct WatchWorkoutState: Codable {
     var isActive: Bool {
         phase == .running || phase == .paused
     }
-}
-
-// MARK: - Remote Command (sent to iPhone)
-
-enum WatchRemoteCommand: String, Codable {
-    case pause = "PAUSE"
-    case resume = "RESUME"
-    case nextStep = "NEXT_STEP"
-    case previousStep = "PREV_STEP"
-    case end = "END"
-}
-
-// MARK: - Command Status
-
-enum WatchCommandStatus: String, Codable {
-    case success
-    case error
 }

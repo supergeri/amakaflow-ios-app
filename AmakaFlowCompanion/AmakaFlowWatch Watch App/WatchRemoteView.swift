@@ -32,86 +32,77 @@ struct WatchRemoteView: View {
 
     @ViewBuilder
     private func activeWorkoutView(state: WatchWorkoutState) -> some View {
-        VStack(spacing: 6) {
-            // Connection warning if phone not reachable
-            if !bridge.isPhoneReachable {
-                HStack(spacing: 4) {
-                    Image(systemName: "iphone.slash")
-                        .font(.caption2)
-                    Text("Open app on iPhone")
-                        .font(.caption2)
+        ScrollView {
+            VStack(spacing: 4) {
+                // Connection warning if phone not reachable (compact)
+                if !bridge.isPhoneReachable {
+                    HStack(spacing: 2) {
+                        Image(systemName: "iphone.slash")
+                        Text("Open iPhone app")
+                    }
+                    .font(.system(size: 10))
+                    .foregroundColor(.orange)
                 }
-                .foregroundColor(.orange)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 2)
-                .background(Color.orange.opacity(0.2))
-                .cornerRadius(4)
+
+                // Step name (primary focus)
+                Text(state.stepName)
+                    .font(.system(size: 16, weight: .bold))
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+
+                // Timer (large and prominent)
+                if state.isTimedStep {
+                    Text(state.formattedTime)
+                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundColor(state.isPaused ? .orange : .primary)
+                }
+
+                // Progress and step count inline
+                HStack {
+                    ProgressView(value: state.progress)
+                        .tint(.blue)
+                    Text("\(state.stepIndex + 1)/\(state.stepCount)")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 4)
+
+                // Round info (if available)
+                if let roundInfo = state.roundInfo {
+                    Text(roundInfo)
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+
+                // Controls - always visible
+                controlsView(state: state)
+                    .padding(.top, 4)
             }
-
-            // Workout name
-            Text(state.workoutName)
-                .font(.caption2)
-                .foregroundColor(.secondary)
-                .lineLimit(1)
-
-            // Step name
-            Text(state.stepName)
-                .font(.headline)
-                .fontWeight(.bold)
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-
-            // Timer or step info
-            if state.isTimedStep {
-                Text(state.formattedTime)
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundColor(state.isPaused ? .orange : .primary)
-            }
-
-            // Round info
-            if let roundInfo = state.roundInfo {
-                Text(roundInfo)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
-
-            // Progress
-            ProgressView(value: state.progress)
-                .tint(.blue)
-                .padding(.horizontal, 8)
-
-            Text("\(state.stepIndex + 1) of \(state.stepCount)")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-
-            Spacer(minLength: 2)
-
-            // Controls
-            controlsView(state: state)
+            .padding(.horizontal, 2)
+            .padding(.vertical, 2)
         }
-        .padding(.horizontal, 4)
-        .padding(.vertical, 4)
     }
 
     // MARK: - Controls
 
     @ViewBuilder
     private func controlsView(state: WatchWorkoutState) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             // Play/Pause + Navigation Row
-            HStack(spacing: 12) {
+            HStack(spacing: 16) {
                 // Previous
                 Button {
                     bridge.sendCommand(.previousStep)
                 } label: {
                     Image(systemName: "backward.fill")
-                        .font(.title3)
+                        .font(.system(size: 20))
+                        .foregroundColor(state.stepIndex == 0 ? .gray : .primary)
                 }
                 .buttonStyle(.plain)
                 .disabled(state.stepIndex == 0)
 
-                // Play/Pause
+                // Play/Pause (prominent)
                 Button {
                     if state.isPaused {
                         bridge.sendCommand(.resume)
@@ -120,8 +111,8 @@ struct WatchRemoteView: View {
                     }
                 } label: {
                     Image(systemName: state.isPaused ? "play.fill" : "pause.fill")
-                        .font(.title2)
-                        .frame(width: 44, height: 44)
+                        .font(.system(size: 22))
+                        .frame(width: 50, height: 50)
                         .background(state.isPaused ? Color.green : Color.orange)
                         .clipShape(Circle())
                 }
@@ -132,7 +123,8 @@ struct WatchRemoteView: View {
                     bridge.sendCommand(.nextStep)
                 } label: {
                     Image(systemName: "forward.fill")
-                        .font(.title3)
+                        .font(.system(size: 20))
+                        .foregroundColor(state.stepIndex >= state.stepCount - 1 ? .gray : .primary)
                 }
                 .buttonStyle(.plain)
                 .disabled(state.stepIndex >= state.stepCount - 1)
@@ -142,8 +134,8 @@ struct WatchRemoteView: View {
             Button {
                 bridge.sendCommand(.end)
             } label: {
-                Text("End")
-                    .font(.caption)
+                Text("End Workout")
+                    .font(.system(size: 12))
                     .foregroundColor(.red)
             }
             .buttonStyle(.plain)
