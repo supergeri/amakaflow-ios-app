@@ -21,6 +21,14 @@
 				<string>amakaflow</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.myamaka.AmakaFlowCompanion.garmin</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>amakaflow-ciq</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

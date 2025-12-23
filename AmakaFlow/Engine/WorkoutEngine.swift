@@ -281,18 +281,28 @@ class WorkoutEngine: ObservableObject {
     private func broadcastState() {
         let state = buildCurrentState()
 
-        // Send to Watch
+        // Send to Apple Watch
         WatchConnectivityManager.shared.sendState(state)
+
+        // Send to Garmin Watch
+        GarminConnectManager.shared.sendWorkoutState(state)
 
         // Update Live Activity
         updateLiveActivity(state)
     }
 
-    /// Explicitly sends current state to Watch (called when watch requests state)
+    /// Explicitly sends current state to Apple Watch (called when watch requests state)
     func sendStateToWatch() {
         guard isActive else { return }
         let state = buildCurrentState()
         WatchConnectivityManager.shared.sendState(state)
+    }
+
+    /// Explicitly sends current state to Garmin Watch (called when watch requests state)
+    func sendStateToGarmin() {
+        guard isActive else { return }
+        let state = buildCurrentState()
+        GarminConnectManager.shared.sendWorkoutState(state)
     }
 
     // MARK: - Live Activity Integration
@@ -363,15 +373,17 @@ class WorkoutEngine: ObservableObject {
             end(reason: .userEnded)
         }
 
-        // ACK the command
+        // ACK the command to all connected watches
         let ack = CommandAck(commandId: commandId, status: .success, errorCode: nil)
         WatchConnectivityManager.shared.sendAck(ack)
+        GarminConnectManager.shared.sendAck(ack)
     }
 
     func handleRemoteCommand(_ commandString: String, commandId: String) {
         guard let command = RemoteCommand(rawValue: commandString) else {
             let ack = CommandAck(commandId: commandId, status: .error, errorCode: "unknown_command")
             WatchConnectivityManager.shared.sendAck(ack)
+            GarminConnectManager.shared.sendAck(ack)
             return
         }
         handleRemoteCommand(command, commandId: commandId)
