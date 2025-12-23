@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>AmakaFlow uses Bluetooth to communicate with your Garmin watch during workouts, allowing you to control workouts and see real-time progress on your wrist.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>UIBackgroundModes</key>
