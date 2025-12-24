@@ -23,10 +23,21 @@ struct AmakaFlowCompanionApp: App {
                 .task {
                     // Initialize WatchConnectivity asynchronously (non-blocking)
                     watchConnectivity.activate()
+
+                    // Auto-reconnect to saved Garmin device if available
+                    if garminConnectivity.savedDeviceInfo != nil && !garminConnectivity.isConnected {
+                        garminConnectivity.connectToSavedDevice()
+                    }
                 }
                 .onOpenURL { url in
                     // Handle Garmin Connect IQ callbacks
-                    _ = garminConnectivity.handleURL(url)
+                    print("⌚ [APP] onOpenURL received: \(url.absoluteString)")
+                    print("⌚ [APP] URL scheme: \(url.scheme ?? "nil")")
+                    print("⌚ [APP] URL host: \(url.host ?? "nil")")
+                    print("⌚ [APP] URL path: \(url.path)")
+                    print("⌚ [APP] URL query: \(url.query ?? "nil")")
+                    let handled = garminConnectivity.handleURL(url)
+                    print("⌚ [APP] URL handled: \(handled)")
                 }
         }
     }
