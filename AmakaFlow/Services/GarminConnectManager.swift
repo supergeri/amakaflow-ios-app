@@ -198,24 +198,82 @@ class GarminConnectManager: NSObject, ObservableObject {
             return
         }
 
-        // Set up device immediately (don't wait for deviceStatusChanged callback)
-        connectedDevice = device
-        connectedDeviceName = deviceInfo.friendlyName
+        // Store device info but don't set isConnected yet
         availableDevices = [device]
         knownDevices = [deviceInfo.friendlyName]
 
-        // Register for device events (may trigger callback later)
+        // Register for device events - this will trigger deviceStatusChanged callback
+        log("Registering for device events...")
         ConnectIQ.sharedInstance()?.register(forDeviceEvents: device, delegate: self)
 
-        // Proactively set up app messaging (same as URL callback flow)
-        log("Setting up app messaging for saved device...")
-        registerForAppMessages(device)
-        isConnected = true
-        lastDebugAction = "Reconnected to saved device"
+        // Check actual device status from SDK
+        refreshConnectionState(for: device)
+        lastDebugAction = "Checking device status..."
         #else
         log("SDK not enabled")
         #endif
     }
+
+    #if CONNECTIQ_ENABLED
+    /// Checks SDK device status and only sets connected state when truly connected
+    private func refreshConnectionState(for device: IQDevice) {
+        guard let ciq = connectIQ else {
+            log("ERROR: connectIQ is nil")
+            return
+        }
+
+        let status = ciq.getDeviceStatus(device)
+        log("SDK getDeviceStatus = \(status.rawValue) (\(statusName(status)))")
+
+        switch status {
+        case .connected:
+            log("✅ Device is CONNECTED - setting up app messaging")
+            connectedDevice = device
+            connectedDeviceName = device.friendlyName ?? "Garmin Watch"
+            isConnected = true
+            registerForAppMessages(device)
+            lastDebugAction = "Device connected"
+
+        case .notConnected:
+            log("⚠️ Device is NOT CONNECTED - waiting for connection")
+            connectedDevice = device
+            connectedDeviceName = device.friendlyName ?? "Garmin Watch"
+            isConnected = false
+            isAppInstalled = false
+            lastDebugAction = "Device not connected"
+
+        case .bluetoothNotReady:
+            log("⚠️ Bluetooth NOT READY")
+            isConnected = false
+            lastDebugAction = "Bluetooth not ready"
+
+        case .notFound:
+            log("⚠️ Device NOT FOUND")
+            isConnected = false
+            lastDebugAction = "Device not found"
+
+        case .invalidDevice:
+            log("❌ INVALID DEVICE")
+            isConnected = false
+            lastDebugAction = "Invalid device"
+
+        @unknown default:
+            log("⚠️ Unknown status: \(status.rawValue)")
+            isConnected = false
+        }
+    }
+
+    private func statusName(_ status: IQDeviceStatus) -> String {
+        switch status {
+        case .connected: return "connected"
+        case .notConnected: return "notConnected"
+        case .bluetoothNotReady: return "bluetoothNotReady"
+        case .notFound: return "notFound"
+        case .invalidDevice: return "invalidDevice"
+        @unknown default: return "unknown"
+        }
+    }
+    #endif
 
     /// Manually registers a device by UUID string
     /// - Parameters:
@@ -610,7 +668,7 @@ class GarminConnectManager: NSObject, ObservableObject {
             return
         }
 
-        print("⌚ Received Garmin message: \(action)")
+        log("Received Garmin message: \(action)")
 
         switch action {
         case "command":
@@ -619,9 +677,21 @@ class GarminConnectManager: NSObject, ObservableObject {
         case "requestState":
             handleStateRequest()
 
+        case "pong":
+            handlePongMessage(message)
+
         default:
-            print("⌚ Unknown Garmin action: \(action)")
+            log("Unknown Garmin action: \(action)")
         }
+    }
+
+    private func handlePongMessage(_ message: [String: Any]) {
+        let pingTimestamp = message["pingTimestamp"] as? Double ?? 0
+        let pongTimestamp = message["pongTimestamp"] as? Int ?? 0
+        log("===== PONG RECEIVED! =====")
+        log("Ping timestamp: \(pingTimestamp)")
+        log("Pong timestamp: \(pongTimestamp)")
+        lastDebugAction = "Pong received!"
     }
 
     private func handleCommandMessage(_ message: [String: Any]) {
@@ -705,11 +775,9 @@ class GarminConnectManager: NSObject, ObservableObject {
             ConnectIQ.sharedInstance()?.register(forDeviceEvents: device, delegate: self)
         }
 
-        // Auto-select first device and immediately set up app messaging
+        // Auto-select first device
         if let firstDevice = sdkDevices.first {
             log("Auto-selecting: \(firstDevice.friendlyName ?? "device")")
-            connectedDevice = firstDevice
-            connectedDeviceName = firstDevice.friendlyName ?? "Garmin Watch"
 
             // Save for future reconnection
             saveDeviceInfo(
@@ -718,11 +786,8 @@ class GarminConnectManager: NSObject, ObservableObject {
                 friendlyName: firstDevice.friendlyName ?? "Garmin Watch"
             )
 
-            // Proactively register for app messages (don't wait for deviceStatusChanged)
-            // This is needed because deviceStatusChanged may not fire if already connected
-            log("Proactively registering for app messages...")
-            registerForAppMessages(firstDevice)
-            isConnected = true
+            // Check actual device status - only set connected if SDK confirms
+            refreshConnectionState(for: firstDevice)
         }
 
         return true
@@ -887,9 +952,22 @@ extension GarminConnectManager {
         log("connectedDevice: \(connectedDevice != nil)")
 
         #if CONNECTIQ_ENABLED
+        // Check device status first
+        if let device = connectedDevice {
+            let status = connectIQ?.getDeviceStatus(device) ?? .invalidDevice
+            log("Device status: \(status.rawValue) (\(statusName(status)))")
+
+            if status != .connected {
+                log("⚠️ Device not connected - ping will likely fail")
+                log("TIP: Try 'Wake' button first to open app on watch")
+                lastDebugAction = "Device not connected"
+            }
+        }
+
         guard let app = myApp else {
             log("ERROR: myApp is nil - no app registered")
-            lastDebugAction = "Test ping failed - no app"
+            log("TIP: Select device first via 'Discover' button")
+            lastDebugAction = "No app - select device first"
             return
         }
 
@@ -908,12 +986,14 @@ extension GarminConnectManager {
             completion: { [weak self] result in
                 Task { @MainActor in
                     self?.log("Ping result: \(result.rawValue)")
-                    if result == .success {
-                        self?.lastDebugAction = "Ping sent successfully!"
+                    switch result {
+                    case .success:
+                        self?.lastDebugAction = "Ping sent! Waiting for pong..."
                         self?.log("✅ Ping delivered to watch!")
-                    } else {
-                        self?.lastDebugAction = "Ping failed: \(result.rawValue)"
-                        self?.log("❌ Ping failed with code: \(result.rawValue)")
+                    default:
+                        self?.lastDebugAction = "Ping failed: \(self?.sendResultName(result) ?? "?")"
+                        self?.log("❌ Ping failed: \(self?.sendResultName(result) ?? "code \(result.rawValue)")")
+                        self?.log("TIP: Make sure watch app is open, try 'Wake' button first")
                     }
                 }
             }
@@ -923,6 +1003,31 @@ extension GarminConnectManager {
         lastDebugAction = "SDK not enabled"
         #endif
     }
+
+    #if CONNECTIQ_ENABLED
+    private func sendResultName(_ result: IQSendMessageResult) -> String {
+        // From IQConstants.h - note the rawValues:
+        // 0 = Success, 1 = Unknown, 2 = InternalError, 3 = DeviceNotAvailable
+        // 4 = AppNotFound, 5 = DeviceIsBusy, 6 = UnsupportedType
+        // 7 = InsufficientMemory, 8 = Timeout, 9 = MaxRetries
+        // 10 = PromptNotDisplayed, 11 = AppAlreadyRunning
+        switch result.rawValue {
+        case 0: return "success"
+        case 1: return "unknown error"
+        case 2: return "internal error"
+        case 3: return "device not available"  // This is what code 3 means!
+        case 4: return "app not found"
+        case 5: return "device busy"
+        case 6: return "unsupported type"
+        case 7: return "insufficient memory"
+        case 8: return "timeout"
+        case 9: return "max retries"
+        case 10: return "prompt not displayed"
+        case 11: return "app already running"
+        default: return "code \(result.rawValue)"
+        }
+    }
+    #endif
 
     /// Force re-initialization of the SDK
     func reinitializeSDK() {
