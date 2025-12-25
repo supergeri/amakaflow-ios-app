@@ -6,25 +6,163 @@
 //
 
 import SwiftUI
+import Combine
+
+// MARK: - Demo Mode State
+class DemoModeState: ObservableObject {
+    static let shared = DemoModeState()
+
+    @Published var isEnabled = false
+    @Published var currentScreen = 0
+
+    let totalScreens = 5
+
+    // Demo screen types: 0=idle, 1=rep-based, 2=timed, 3=paused, 4=complete
+    var demoWorkoutState: WatchWorkoutState? {
+        guard isEnabled else { return nil }
+
+        switch currentScreen {
+        case 1: // Rep-based step (Jumping Jacks)
+            return WorkoutState(
+                stateVersion: 1,
+                workoutId: "demo-1",
+                workoutName: "Demo Workout",
+                phase: .running,
+                stepIndex: 1,
+                stepCount: 7,
+                stepName: "Jumping Jacks",
+                stepType: .reps,
+                remainingMs: nil,
+                roundInfo: "Round 2 of 3",
+                lastCommandAck: nil
+            )
+        case 2: // Timed step (Warm Up)
+            return WorkoutState(
+                stateVersion: 1,
+                workoutId: "demo-1",
+                workoutName: "Demo Workout",
+                phase: .running,
+                stepIndex: 0,
+                stepCount: 7,
+                stepName: "Warm Up",
+                stepType: .timed,
+                remainingMs: 295000, // 4:55
+                roundInfo: nil,
+                lastCommandAck: nil
+            )
+        case 3: // Paused state
+            return WorkoutState(
+                stateVersion: 1,
+                workoutId: "demo-1",
+                workoutName: "Demo Workout",
+                phase: .paused,
+                stepIndex: 1,
+                stepCount: 7,
+                stepName: "Jumping Jacks",
+                stepType: .reps,
+                remainingMs: nil,
+                roundInfo: "Round 2 of 3",
+                lastCommandAck: nil
+            )
+        case 4: // Complete
+            return WorkoutState(
+                stateVersion: 1,
+                workoutId: "demo-1",
+                workoutName: "Demo Workout",
+                phase: .ended,
+                stepIndex: 6,
+                stepCount: 7,
+                stepName: "Cool Down",
+                stepType: .reps,
+                remainingMs: nil,
+                roundInfo: nil,
+                lastCommandAck: nil
+            )
+        default: // 0 = idle
+            return nil
+        }
+    }
+
+    func toggle() {
+        isEnabled.toggle()
+        if isEnabled {
+            currentScreen = 0
+        }
+    }
+
+    func nextScreen() {
+        currentScreen = (currentScreen + 1) % totalScreens
+    }
+}
 
 struct WatchRemoteView: View {
     @ObservedObject var bridge: WatchConnectivityBridge
+    @StateObject private var demoState = DemoModeState.shared
     @Environment(\.dismiss) private var dismiss
+
+    // Computed state that uses demo state when in demo mode
+    private var displayState: WatchWorkoutState? {
+        if demoState.isEnabled {
+            return demoState.demoWorkoutState
+        }
+        return bridge.workoutState
+    }
+
+    private var showComplete: Bool {
+        demoState.isEnabled && demoState.currentScreen == 4
+    }
 
     var body: some View {
         Group {
-            // Show workout controls if we have an active workout state
-            // (even if phone isn't immediately reachable - we have cached state)
-            if let state = bridge.workoutState, state.isActive {
+            if showComplete {
+                completeView
+            } else if let state = displayState, state.isActive {
                 activeWorkoutView(state: state)
-            } else if !bridge.isPhoneReachable && bridge.workoutState == nil {
+            } else if !demoState.isEnabled && !bridge.isPhoneReachable && bridge.workoutState == nil {
                 disconnectedView
             } else {
                 idleView
             }
         }
+        .overlay(alignment: .bottom) {
+            // Demo mode controls at bottom
+            if demoState.isEnabled {
+                HStack(spacing: 20) {
+                    Button {
+                        demoState.nextScreen()
+                    } label: {
+                        Image(systemName: "forward.fill")
+                            .font(.system(size: 16))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.yellow)
+
+                    Text("DEMO \(demoState.currentScreen + 1)/\(demoState.totalScreens)")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.yellow)
+
+                    Button {
+                        withAnimation {
+                            demoState.toggle()
+                        }
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 16))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.red)
+                }
+                .padding(.vertical, 8)
+                .padding(.horizontal, 12)
+                .background(Color.black.opacity(0.8))
+                .cornerRadius(8)
+                .padding(.bottom, 4)
+            }
+        }
         .onAppear {
-            bridge.requestCurrentState()
+            if !demoState.isEnabled {
+                bridge.requestCurrentState()
+            }
         }
     }
 
@@ -183,10 +321,42 @@ struct WatchRemoteView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            Button("Refresh") {
-                bridge.requestCurrentState()
+            HStack(spacing: 12) {
+                Button("Refresh") {
+                    bridge.requestCurrentState()
+                }
+                .buttonStyle(.bordered)
+
+                Button("Demo") {
+                    withAnimation {
+                        demoState.toggle()
+                    }
+                }
+                .buttonStyle(.bordered)
+                .tint(.yellow)
             }
-            .buttonStyle(.bordered)
+        }
+    }
+
+    // MARK: - Complete View (Demo mode only)
+
+    private var completeView: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 50))
+                .foregroundColor(.green)
+
+            Text("Complete!")
+                .font(.title2)
+                .fontWeight(.bold)
+
+            Text("Cool Down")
+                .font(.headline)
+                .foregroundColor(.secondary)
+
+            Text("Great workout!")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
     }
 }
