@@ -30,14 +30,10 @@ jobs:
       - name: Run tests
         working-directory: AmakaFlowCompanion
         run: |
-          # Find an available iPhone simulator
-          SIMULATOR=$(xcrun simctl list devices available | grep "iPhone" | head -1 | sed 's/.*(\([^)]*\)).*/\1/')
-          echo "Using simulator: $SIMULATOR"
-
           xcodebuild test \
             -project AmakaFlowCompanion.xcodeproj \
             -scheme AmakaFlowCompanion \
-            -destination "platform=iOS Simulator,id=$SIMULATOR" \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
             -resultBundlePath TestResults \
             -enableCodeCoverage YES \
             CODE_SIGN_IDENTITY="" \
