@@ -1,0 +1,76 @@
+name: iOS Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Clone workoutkit-sync dependency
+        run: |
+          # The project references ../../../workoutkit-sync relative to AmakaFlowCompanion/
+          # Checkout is at /Users/runner/work/amakaflow-ios-app/amakaflow-ios-app
+          # Need to clone to /Users/runner/work/workoutkit-sync
+          git clone https://github.com/supergeri/workoutkit-sync.git ../../workoutkit-sync
+          ls -la ../../
+
+      - name: List available Xcode versions
+        run: ls -la /Applications | grep Xcode
+
+      - name: Select Xcode
+        run: |
+          # Use the latest available Xcode 16.x
+          XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XCODE_PATH" ]; then
+            XCODE_PATH=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
+          fi
+          echo "Using Xcode: $XCODE_PATH"
+          sudo xcode-select -s "$XCODE_PATH"
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: List available simulators
+        run: xcrun simctl list devices available | grep -E "iPhone (15|16)" | head -10
+
+      - name: Boot simulator
+        run: |
+          # Find and boot an iPhone simulator
+          DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 16" | head -1 | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}")
+          if [ -z "$DEVICE_ID" ]; then
+            DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 15" | head -1 | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}")
+          fi
+          echo "Booting simulator: $DEVICE_ID"
+          xcrun simctl boot "$DEVICE_ID" || true
+
+      - name: Run tests
+        working-directory: AmakaFlowCompanion
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project AmakaFlowCompanion.xcodeproj \
+            -scheme AmakaFlowCompanion \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -only-testing:AmakaFlowCompanionTests \
+            -resultBundlePath TestResults \
+            -enableCodeCoverage YES \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            SKIP_INSTALL=YES
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: AmakaFlowCompanion/TestResults
+          retention-days: 7
