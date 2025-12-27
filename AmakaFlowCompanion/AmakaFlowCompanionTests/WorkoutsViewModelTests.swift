@@ -15,6 +15,9 @@ final class WorkoutsViewModelTests: XCTestCase {
 
     override func setUp() async throws {
         viewModel = WorkoutsViewModel()
+        // Enable demo mode to load mock data for testing
+        viewModel.useDemoMode = true
+        await viewModel.loadWorkouts()
     }
 
     override func tearDown() async throws {
@@ -24,7 +27,7 @@ final class WorkoutsViewModelTests: XCTestCase {
     // MARK: - Initial State Tests
 
     func testInitialStateHasMockData() {
-        // ViewModel loads mock data on init
+        // ViewModel loads mock data when demo mode is enabled
         XCTAssertFalse(viewModel.upcomingWorkouts.isEmpty)
         XCTAssertFalse(viewModel.incomingWorkouts.isEmpty)
         XCTAssertEqual(viewModel.searchQuery, "")

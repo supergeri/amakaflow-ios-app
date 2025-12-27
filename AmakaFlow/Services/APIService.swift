@@ -3,7 +3,6 @@
 //  AmakaFlow
 //
 //  API service for fetching workouts from mapper-api
-//  Placeholder for future implementation
 //
 
 import Foundation
@@ -11,39 +10,188 @@ import Foundation
 /// Service for API communication with backend
 class APIService {
     static let shared = APIService()
-    
-    // TODO: Configure base URL from environment
-    private let baseURL = "http://localhost:8001"
-    
+
+    private let baseURL = AppEnvironment.current.mapperAPIURL
+    private let session = URLSession.shared
+
     private init() {}
-    
+
+    // MARK: - Auth Headers
+
+    private var authHeaders: [String: String] {
+        var headers = ["Content-Type": "application/json"]
+        if let token = PairingService.shared.getToken() {
+            headers["Authorization"] = "Bearer \(token)"
+        }
+        return headers
+    }
+
+    // MARK: - Workouts
+
     /// Fetch workouts from backend
     /// - Returns: Array of workouts
     /// - Throws: APIError if request fails
     func fetchWorkouts() async throws -> [Workout] {
-        // TODO: Implement API call to GET /workouts
-        // For now, return empty array
-        // This will be implemented when Clerk auth is added
-        throw APIError.notImplemented
+        guard PairingService.shared.isPaired else {
+            throw APIError.unauthorized
+        }
+
+        let url = URL(string: "\(baseURL)/workouts")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.allHTTPHeaderFields = authHeaders
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        switch httpResponse.statusCode {
+        case 200:
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            return try decoder.decode([Workout].self, from: data)
+        case 401:
+            throw APIError.unauthorized
+        default:
+            throw APIError.serverError(httpResponse.statusCode)
+        }
     }
-    
+
+    /// Fetch scheduled workouts from backend
+    /// - Returns: Array of scheduled workouts
+    /// - Throws: APIError if request fails
+    func fetchScheduledWorkouts() async throws -> [ScheduledWorkout] {
+        guard PairingService.shared.isPaired else {
+            throw APIError.unauthorized
+        }
+
+        let url = URL(string: "\(baseURL)/workouts/scheduled")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.allHTTPHeaderFields = authHeaders
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        switch httpResponse.statusCode {
+        case 200:
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            decoder.dateDecodingStrategy = .iso8601
+            return try decoder.decode([ScheduledWorkout].self, from: data)
+        case 401:
+            throw APIError.unauthorized
+        case 404:
+            // Endpoint may not exist yet, return empty array
+            return []
+        default:
+            throw APIError.serverError(httpResponse.statusCode)
+        }
+    }
+
+    /// Fetch workouts that have been pushed to this device
+    /// - Returns: Array of workouts
+    /// - Throws: APIError if request fails
+    func fetchPushedWorkouts() async throws -> [Workout] {
+        guard PairingService.shared.isPaired else {
+            throw APIError.unauthorized
+        }
+
+        let url = URL(string: "\(baseURL)/workouts/pushed?device=ios-companion")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.allHTTPHeaderFields = authHeaders
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        switch httpResponse.statusCode {
+        case 200:
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            return try decoder.decode([Workout].self, from: data)
+        case 401:
+            throw APIError.unauthorized
+        case 404:
+            // Endpoint may not exist yet, return empty array
+            return []
+        default:
+            throw APIError.serverError(httpResponse.statusCode)
+        }
+    }
+
     /// Sync workout to backend
     /// - Parameter workout: Workout to sync
     /// - Throws: APIError if sync fails
     func syncWorkout(_ workout: Workout) async throws {
-        // TODO: Implement API call to POST /workouts
-        // This will be implemented when Clerk auth is added
-        throw APIError.notImplemented
+        guard PairingService.shared.isPaired else {
+            throw APIError.unauthorized
+        }
+
+        let url = URL(string: "\(baseURL)/workouts/sync")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.allHTTPHeaderFields = authHeaders
+
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        request.httpBody = try encoder.encode(workout)
+
+        let (_, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        switch httpResponse.statusCode {
+        case 200, 201:
+            return
+        case 401:
+            throw APIError.unauthorized
+        default:
+            throw APIError.serverError(httpResponse.statusCode)
+        }
     }
-    
+
     /// Get workout export in Apple WorkoutKit format
     /// - Parameter workoutId: ID of workout to export
     /// - Returns: JSON string in WKPlanDTO format
     /// - Throws: APIError if export fails
     func getAppleExport(workoutId: String) async throws -> String {
-        // TODO: Implement API call to GET /export/apple/{workoutId}
-        // This will return JSON in WKPlanDTO format ready for WorkoutKitSync
-        throw APIError.notImplemented
+        guard PairingService.shared.isPaired else {
+            throw APIError.unauthorized
+        }
+
+        let url = URL(string: "\(baseURL)/export/apple/\(workoutId)")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.allHTTPHeaderFields = authHeaders
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        switch httpResponse.statusCode {
+        case 200:
+            guard let jsonString = String(data: data, encoding: .utf8) else {
+                throw APIError.decodingError(NSError(domain: "APIService", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to decode response"]))
+            }
+            return jsonString
+        case 401:
+            throw APIError.unauthorized
+        default:
+            throw APIError.serverError(httpResponse.statusCode)
+        }
     }
 }
 
@@ -51,26 +199,28 @@ class APIService {
 enum APIError: LocalizedError {
     case notImplemented
     case invalidURL
+    case invalidResponse
     case networkError(Error)
     case decodingError(Error)
     case unauthorized
     case serverError(Int)
-    
+
     var errorDescription: String? {
         switch self {
         case .notImplemented:
             return "API feature not yet implemented"
         case .invalidURL:
             return "Invalid URL"
+        case .invalidResponse:
+            return "Invalid server response"
         case .networkError(let error):
             return "Network error: \(error.localizedDescription)"
         case .decodingError(let error):
             return "Decoding error: \(error.localizedDescription)"
         case .unauthorized:
-            return "Unauthorized - please sign in"
+            return "Session expired. Please reconnect."
         case .serverError(let code):
             return "Server error: \(code)"
         }
     }
 }
-
