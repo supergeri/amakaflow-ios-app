@@ -15,11 +15,69 @@ class WorkoutsViewModel: ObservableObject {
     @Published var searchQuery: String = ""
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
-    
+    @Published var useDemoMode: Bool = false
+
     private let calendarManager = CalendarManager()
-    
+    private let apiService = APIService.shared
+
     init() {
-        loadMockData()
+        // Start with empty data - will load from API or demo mode
+    }
+
+    // MARK: - Data Loading
+
+    /// Load workouts from API or demo mode
+    func loadWorkouts() async {
+        isLoading = true
+        errorMessage = nil
+
+        if useDemoMode || !PairingService.shared.isPaired {
+            loadMockData()
+            isLoading = false
+            return
+        }
+
+        do {
+            async let fetchedWorkouts = apiService.fetchWorkouts()
+            async let fetchedScheduled = apiService.fetchScheduledWorkouts()
+
+            let (workouts, scheduled) = try await (fetchedWorkouts, fetchedScheduled)
+
+            incomingWorkouts = workouts
+            upcomingWorkouts = scheduled
+        } catch let error as APIError {
+            if case .unauthorized = error {
+                // Token expired, user needs to re-pair
+                errorMessage = "Session expired. Please reconnect."
+            } else {
+                errorMessage = error.localizedDescription
+                // Fall back to demo mode on error
+                loadMockData()
+            }
+        } catch {
+            errorMessage = "Failed to load workouts: \(error.localizedDescription)"
+            // Fall back to demo mode on error
+            loadMockData()
+        }
+
+        isLoading = false
+    }
+
+    /// Refresh workouts from API
+    func refreshWorkouts() async {
+        await loadWorkouts()
+    }
+
+    /// Toggle demo mode
+    func toggleDemoMode() {
+        useDemoMode.toggle()
+        if useDemoMode {
+            loadMockData()
+        } else {
+            Task {
+                await loadWorkouts()
+            }
+        }
     }
     
     // MARK: - Computed Properties
