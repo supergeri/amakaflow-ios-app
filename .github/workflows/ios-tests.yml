@@ -28,9 +28,11 @@ jobs:
 
       - name: Select Xcode
         run: |
-          # Use the latest available Xcode 16.x
-          XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)
+          # Use Xcode 26.x (beta) which properly handles PBXFileSystemSynchronizedRootGroup
+          # Xcode 16.x has issues with the newer project format
+          XCODE_PATH=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
           if [ -z "$XCODE_PATH" ]; then
+            # Fallback to latest available Xcode
             XCODE_PATH=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
           fi
           echo "Using Xcode: $XCODE_PATH"
@@ -40,17 +42,32 @@ jobs:
         run: xcodebuild -version
 
       - name: List available simulators
-        run: xcrun simctl list devices available | grep -E "iPhone (15|16)" | head -10
+        run: xcrun simctl list devices available | grep -E "iPhone (15|16|17)" | head -10
 
       - name: Boot simulator
         run: |
-          # Find and boot an iPhone simulator
-          DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 16" | head -1 | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}")
+          # Find and boot an iPhone simulator (prefer iPhone 17 for Xcode 26.x, fallback to 16/15)
+          DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 17" | head -1 | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}")
+          if [ -z "$DEVICE_ID" ]; then
+            DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 16" | head -1 | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}")
+          fi
           if [ -z "$DEVICE_ID" ]; then
             DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 15" | head -1 | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}")
           fi
           echo "Booting simulator: $DEVICE_ID"
           xcrun simctl boot "$DEVICE_ID" || true
+
+      - name: Determine simulator name
+        id: simulator
+        run: |
+          # Determine which iPhone simulator to use based on availability
+          if xcrun simctl list devices available | grep -q "iPhone 17"; then
+            echo "name=iPhone 17 Pro" >> $GITHUB_OUTPUT
+          elif xcrun simctl list devices available | grep -q "iPhone 16"; then
+            echo "name=iPhone 16" >> $GITHUB_OUTPUT
+          else
+            echo "name=iPhone 15" >> $GITHUB_OUTPUT
+          fi
 
       - name: Run tests
         working-directory: AmakaFlowCompanion
@@ -59,7 +76,7 @@ jobs:
           xcodebuild test \
             -project AmakaFlowCompanion.xcodeproj \
             -scheme AmakaFlowCompanion \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.name }}' \
             -only-testing:AmakaFlowCompanionTests \
             -resultBundlePath TestResults \
             -enableCodeCoverage YES \
