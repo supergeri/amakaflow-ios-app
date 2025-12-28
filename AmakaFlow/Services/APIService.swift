@@ -33,10 +33,13 @@ class APIService {
     /// - Throws: APIError if request fails
     func fetchWorkouts() async throws -> [Workout] {
         guard PairingService.shared.isPaired else {
+            print("[APIService] Not paired, throwing unauthorized")
             throw APIError.unauthorized
         }
 
         let url = URL(string: "\(baseURL)/workouts")!
+        print("[APIService] Fetching workouts from: \(url)")
+
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.allHTTPHeaderFields = authHeaders
@@ -44,17 +47,34 @@ class APIService {
         let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
+            print("[APIService] Invalid response type")
             throw APIError.invalidResponse
         }
+
+        print("[APIService] Response status: \(httpResponse.statusCode)")
 
         switch httpResponse.statusCode {
         case 200:
             let decoder = JSONDecoder()
             decoder.keyDecodingStrategy = .convertFromSnakeCase
-            return try decoder.decode([Workout].self, from: data)
+            do {
+                let workouts = try decoder.decode([Workout].self, from: data)
+                print("[APIService] Decoded \(workouts.count) workouts")
+                return workouts
+            } catch {
+                print("[APIService] Decoding error: \(error)")
+                if let responseString = String(data: data, encoding: .utf8) {
+                    print("[APIService] Response body: \(responseString.prefix(500))")
+                }
+                throw APIError.decodingError(error)
+            }
         case 401:
+            print("[APIService] Unauthorized (401)")
             throw APIError.unauthorized
         default:
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("[APIService] Error response: \(responseString.prefix(200))")
+            }
             throw APIError.serverError(httpResponse.statusCode)
         }
     }

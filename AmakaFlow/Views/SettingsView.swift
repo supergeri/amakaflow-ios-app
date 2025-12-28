@@ -34,7 +34,9 @@ struct SettingsView: View {
     @State private var manualUUID = ""
     @State private var manualDeviceName = ""
     @State private var showingDebugLog = false
+    @State private var showingDisconnectAlert = false
     @EnvironmentObject private var garminConnectivity: GarminConnectManager
+    @EnvironmentObject private var pairingService: PairingService
 
     var body: some View {
         NavigationStack {
@@ -845,21 +847,110 @@ struct SettingsView: View {
                 .tracking(1)
                 .padding(.horizontal, Theme.Spacing.xs)
 
+            VStack(spacing: Theme.Spacing.md) {
+                // User Profile Card
+                HStack(spacing: Theme.Spacing.md) {
+                    // Profile image
+                    if let avatarUrl = pairingService.userProfile?.avatarUrl,
+                       let url = URL(string: avatarUrl) {
+                        AsyncImage(url: url) { image in
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        } placeholder: {
+                            profilePlaceholder
+                        }
+                        .frame(width: 56, height: 56)
+                        .clipShape(Circle())
+                    } else {
+                        profilePlaceholder
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        if let profile = pairingService.userProfile {
+                            Text(profile.name ?? profile.email ?? "AmakaFlow User")
+                                .font(Theme.Typography.bodyBold)
+                                .foregroundColor(Theme.Colors.textPrimary)
+
+                            if let email = profile.email {
+                                Text(email)
+                                    .font(Theme.Typography.caption)
+                                    .foregroundColor(Theme.Colors.textSecondary)
+                            }
+                        } else {
+                            Text("Connected")
+                                .font(Theme.Typography.bodyBold)
+                                .foregroundColor(Theme.Colors.textPrimary)
+
+                            Text("No profile data available")
+                                .font(Theme.Typography.caption)
+                                .foregroundColor(Theme.Colors.textSecondary)
+                        }
+                    }
+
+                    Spacer()
+
+                    // Connection status badge
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(Theme.Colors.accentGreen)
+                            .frame(width: 8, height: 8)
+                        Text("Connected")
+                            .font(Theme.Typography.footnote)
+                    }
+                    .foregroundColor(Theme.Colors.accentGreen)
+                    .padding(.horizontal, Theme.Spacing.sm)
+                    .padding(.vertical, 4)
+                    .background(Theme.Colors.accentGreen.opacity(0.1))
+                    .cornerRadius(Theme.CornerRadius.sm)
+                }
+
+                // Environment info
+                HStack {
+                    Image(systemName: "server.rack")
+                        .font(.system(size: 14))
+                        .foregroundColor(Theme.Colors.textTertiary)
+                    Text("Environment: \(AppEnvironment.current.displayName)")
+                        .font(Theme.Typography.caption)
+                        .foregroundColor(Theme.Colors.textTertiary)
+                    Spacer()
+                }
+
+                // App version
+                HStack {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 14))
+                        .foregroundColor(Theme.Colors.textTertiary)
+                    Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"))")
+                        .font(Theme.Typography.caption)
+                        .foregroundColor(Theme.Colors.textTertiary)
+                    Spacer()
+                }
+            }
+            .padding(Theme.Spacing.md)
+            .background(Theme.Colors.surface)
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
+                    .stroke(Theme.Colors.borderLight, lineWidth: 1)
+            )
+            .cornerRadius(Theme.CornerRadius.md)
+
+            // Disconnect button
             Button {
-                showingSignOutAlert = true
+                showingDisconnectAlert = true
             } label: {
                 HStack(spacing: Theme.Spacing.md) {
                     ZStack {
                         RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
-                            .fill(Theme.Colors.accentOrange.opacity(0.1))
+                            .fill(Theme.Colors.accentRed.opacity(0.1))
                             .frame(width: 48, height: 48)
 
-                        Image(systemName: "rectangle.portrait.and.arrow.right")
+                        Image(systemName: "link.badge.minus")
                             .font(.system(size: 22))
-                            .foregroundColor(Theme.Colors.accentOrange)
+                            .foregroundColor(Theme.Colors.accentRed)
                     }
 
-                    Text("Sign Out")
+                    Text("Disconnect Account")
                         .font(Theme.Typography.bodyBold)
                         .foregroundColor(Theme.Colors.textPrimary)
 
@@ -874,6 +965,25 @@ struct SettingsView: View {
                 .cornerRadius(Theme.CornerRadius.md)
             }
             .buttonStyle(.plain)
+        }
+        .confirmationDialog("Disconnect Account?", isPresented: $showingDisconnectAlert, titleVisibility: .visible) {
+            Button("Disconnect", role: .destructive) {
+                pairingService.unpair()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("You'll need to pair again to sync workouts from AmakaFlow.")
+        }
+    }
+
+    private var profilePlaceholder: some View {
+        ZStack {
+            Circle()
+                .fill(Theme.Colors.accentBlue.opacity(0.2))
+                .frame(width: 56, height: 56)
+            Image(systemName: "person.fill")
+                .font(.system(size: 24))
+                .foregroundColor(Theme.Colors.accentBlue)
         }
     }
 
@@ -1039,5 +1149,6 @@ private struct SettingsToggleRow: View {
 #Preview {
     SettingsView()
         .environmentObject(GarminConnectManager.shared)
+        .environmentObject(PairingService.shared)
         .preferredColorScheme(.dark)
 }

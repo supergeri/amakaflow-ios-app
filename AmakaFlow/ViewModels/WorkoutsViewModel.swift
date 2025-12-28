@@ -31,11 +31,22 @@ class WorkoutsViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
-        if useDemoMode || !PairingService.shared.isPaired {
+        // Only show mock data if explicitly in demo mode OR not paired
+        if useDemoMode {
+            print("[WorkoutsViewModel] Demo mode enabled, loading mock data")
             loadMockData()
             isLoading = false
             return
         }
+
+        if !PairingService.shared.isPaired {
+            print("[WorkoutsViewModel] Not paired, loading mock data")
+            loadMockData()
+            isLoading = false
+            return
+        }
+
+        print("[WorkoutsViewModel] Fetching workouts from API...")
 
         do {
             async let fetchedWorkouts = apiService.fetchWorkouts()
@@ -43,21 +54,26 @@ class WorkoutsViewModel: ObservableObject {
 
             let (workouts, scheduled) = try await (fetchedWorkouts, fetchedScheduled)
 
+            print("[WorkoutsViewModel] Fetched \(workouts.count) workouts, \(scheduled.count) scheduled")
             incomingWorkouts = workouts
             upcomingWorkouts = scheduled
         } catch let error as APIError {
+            print("[WorkoutsViewModel] API error: \(error.localizedDescription)")
             if case .unauthorized = error {
                 // Token expired, user needs to re-pair
                 errorMessage = "Session expired. Please reconnect."
             } else {
                 errorMessage = error.localizedDescription
-                // Fall back to demo mode on error
-                loadMockData()
+                // Don't fall back to mock data - show empty state instead
+                incomingWorkouts = []
+                upcomingWorkouts = []
             }
         } catch {
+            print("[WorkoutsViewModel] Error: \(error.localizedDescription)")
             errorMessage = "Failed to load workouts: \(error.localizedDescription)"
-            // Fall back to demo mode on error
-            loadMockData()
+            // Don't fall back to mock data - show empty state instead
+            incomingWorkouts = []
+            upcomingWorkouts = []
         }
 
         isLoading = false
