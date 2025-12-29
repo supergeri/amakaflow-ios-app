@@ -210,6 +210,8 @@ class WorkoutEngine: ObservableObject {
     }
 
     func reset() {
+        timer?.invalidate()
+        timer = nil
         phase = .idle
         workout = nil
         flattenedSteps = []
