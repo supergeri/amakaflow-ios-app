@@ -16,6 +16,7 @@ class WorkoutsViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var useDemoMode: Bool = false
+    @Published var pendingWorkoutsStatus: String = ""  // Debug status for pending workouts
 
     private let calendarManager = CalendarManager()
     private let apiService = APIService.shared
@@ -145,7 +146,68 @@ class WorkoutsViewModel: ObservableObject {
     func sendToWatch(_ workout: Workout) async {
         await WatchConnectivityManager.shared.sendWorkout(workout)
     }
-    
+
+    /// Check for pending workouts from iOS companion endpoint and sync to Watch + WorkoutKit
+    func checkPendingWorkouts() async {
+        pendingWorkoutsStatus = "Checking..."
+
+        guard PairingService.shared.isPaired else {
+            pendingWorkoutsStatus = "Not paired - skipping"
+            print("[WorkoutsViewModel] Not paired, skipping pending workout check")
+            return
+        }
+
+        print("[WorkoutsViewModel] Checking for pending workouts...")
+
+        do {
+            let pendingWorkouts = try await apiService.fetchPendingWorkouts()
+
+            guard !pendingWorkouts.isEmpty else {
+                pendingWorkoutsStatus = "No pending workouts"
+                print("[WorkoutsViewModel] No pending workouts found")
+                return
+            }
+
+            pendingWorkoutsStatus = "Found \(pendingWorkouts.count) workout(s)"
+            print("[WorkoutsViewModel] Found \(pendingWorkouts.count) pending workouts, syncing...")
+
+            for workout in pendingWorkouts {
+                // Sync to Watch
+                await WatchConnectivityManager.shared.sendWorkout(workout)
+                print("[WorkoutsViewModel] Sent '\(workout.name)' to Watch")
+
+                // Save to WorkoutKit (iOS 18+)
+                if #available(iOS 18.0, *) {
+                    do {
+                        try await WorkoutKitConverter.shared.saveToWorkoutKit(workout)
+                        print("[WorkoutsViewModel] Saved '\(workout.name)' to WorkoutKit")
+                    } catch {
+                        print("[WorkoutsViewModel] Failed to save to WorkoutKit: \(error.localizedDescription)")
+                    }
+                }
+
+                // Add to local workouts list if not already present
+                if !incomingWorkouts.contains(where: { $0.id == workout.id }) {
+                    incomingWorkouts.append(workout)
+                    print("[WorkoutsViewModel] Added '\(workout.name)' to incoming workouts")
+                }
+            }
+
+            pendingWorkoutsStatus = "Synced \(pendingWorkouts.count) workout(s)"
+            print("[WorkoutsViewModel] Finished syncing \(pendingWorkouts.count) pending workouts")
+        } catch {
+            // Show more detailed error info including raw response
+            if case APIError.serverErrorWithBody(_, let body) = error {
+                pendingWorkoutsStatus = body
+            } else if case APIError.decodingError(let decodeError) = error {
+                pendingWorkoutsStatus = "Decode: \(decodeError)"
+            } else {
+                pendingWorkoutsStatus = "Error: \(error.localizedDescription)"
+            }
+            print("[WorkoutsViewModel] Failed to fetch pending workouts: \(error)")
+        }
+    }
+
     func deleteWorkout(_ workout: ScheduledWorkout) {
         upcomingWorkouts.removeAll { $0.id == workout.id }
     }
