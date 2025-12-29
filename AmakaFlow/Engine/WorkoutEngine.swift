@@ -212,6 +212,12 @@ class WorkoutEngine: ObservableObject {
     func reset() {
         timer?.invalidate()
         timer = nil
+
+        // End any active Live Activity
+        Task {
+            await LiveActivityManager.shared.endActivity()
+        }
+
         phase = .idle
         workout = nil
         flattenedSteps = []
