@@ -114,6 +114,15 @@ enum WorkoutSource: String, Codable {
     case image
     case ai
     case coach
+    case amaka
+    case other
+
+    // Handle unknown sources gracefully
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = WorkoutSource(rawValue: rawValue) ?? .other
+    }
 }
 
 // MARK: - Workout Sport Type
@@ -137,13 +146,13 @@ struct Workout: Identifiable, Codable, Hashable {
     let description: String?
     let source: WorkoutSource
     let sourceUrl: String?
-    
+
     init(
         id: String = UUID().uuidString,
         name: String,
         sport: WorkoutSport,
         duration: Int,
-        intervals: [WorkoutInterval],
+        intervals: [WorkoutInterval] = [],
         description: String? = nil,
         source: WorkoutSource,
         sourceUrl: String? = nil
@@ -156,6 +165,23 @@ struct Workout: Identifiable, Codable, Hashable {
         self.description = description
         self.source = source
         self.sourceUrl = sourceUrl
+    }
+
+    // Custom decoder to handle missing/null intervals
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        sport = try container.decode(WorkoutSport.self, forKey: .sport)
+        duration = try container.decode(Int.self, forKey: .duration)
+        intervals = try container.decodeIfPresent([WorkoutInterval].self, forKey: .intervals) ?? []
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        source = try container.decode(WorkoutSource.self, forKey: .source)
+        sourceUrl = try container.decodeIfPresent(String.self, forKey: .sourceUrl)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, sport, duration, intervals, description, source, sourceUrl
     }
 }
 

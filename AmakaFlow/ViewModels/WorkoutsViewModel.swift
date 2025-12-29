@@ -16,6 +16,7 @@ class WorkoutsViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var useDemoMode: Bool = false
+    @Published var pendingWorkoutsStatus: String = ""  // Debug status for pending workouts
 
     private let calendarManager = CalendarManager()
     private let apiService = APIService.shared
@@ -148,7 +149,10 @@ class WorkoutsViewModel: ObservableObject {
 
     /// Check for pending workouts from iOS companion endpoint and sync to Watch + WorkoutKit
     func checkPendingWorkouts() async {
+        pendingWorkoutsStatus = "Checking..."
+
         guard PairingService.shared.isPaired else {
+            pendingWorkoutsStatus = "Not paired - skipping"
             print("[WorkoutsViewModel] Not paired, skipping pending workout check")
             return
         }
@@ -159,10 +163,12 @@ class WorkoutsViewModel: ObservableObject {
             let pendingWorkouts = try await apiService.fetchPendingWorkouts()
 
             guard !pendingWorkouts.isEmpty else {
+                pendingWorkoutsStatus = "No pending workouts"
                 print("[WorkoutsViewModel] No pending workouts found")
                 return
             }
 
+            pendingWorkoutsStatus = "Found \(pendingWorkouts.count) workout(s)"
             print("[WorkoutsViewModel] Found \(pendingWorkouts.count) pending workouts, syncing...")
 
             for workout in pendingWorkouts {
@@ -187,9 +193,18 @@ class WorkoutsViewModel: ObservableObject {
                 }
             }
 
+            pendingWorkoutsStatus = "Synced \(pendingWorkouts.count) workout(s)"
             print("[WorkoutsViewModel] Finished syncing \(pendingWorkouts.count) pending workouts")
         } catch {
-            print("[WorkoutsViewModel] Failed to fetch pending workouts: \(error.localizedDescription)")
+            // Show more detailed error info including raw response
+            if case APIError.serverErrorWithBody(_, let body) = error {
+                pendingWorkoutsStatus = body
+            } else if case APIError.decodingError(let decodeError) = error {
+                pendingWorkoutsStatus = "Decode: \(decodeError)"
+            } else {
+                pendingWorkoutsStatus = "Error: \(error.localizedDescription)"
+            }
+            print("[WorkoutsViewModel] Failed to fetch pending workouts: \(error)")
         }
     }
 

@@ -184,9 +184,6 @@ class APIService {
                 return pendingResponse.workouts
             } catch {
                 print("[APIService] Decoding error: \(error)")
-                if let responseString = String(data: data, encoding: .utf8) {
-                    print("[APIService] Response body: \(responseString.prefix(500))")
-                }
                 throw APIError.decodingError(error)
             }
         case 401:
