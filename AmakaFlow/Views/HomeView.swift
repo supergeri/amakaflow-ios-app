@@ -297,7 +297,10 @@ struct HomeView: View {
                         ForEach(viewModel.incomingWorkouts) { workout in
                             Button {
                                 showingQuickStart = false
-                                startWorkoutWithDeviceCheck(workout)
+                                // Delay to let sheet fully dismiss before starting workout
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                    startWorkoutWithDeviceCheck(workout)
+                                }
                             } label: {
                                 WorkoutCard(workout: workout, isPrimary: false)
                             }
