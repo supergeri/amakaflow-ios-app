@@ -56,6 +56,7 @@ public enum WorkoutPhase: String, Codable {
     case idle
     case running
     case paused
+    case resting    // Rest period between steps (manual or timed)
     case ended
 }
 
@@ -74,6 +75,7 @@ public enum RemoteCommand: String, Codable {
     case resume = "RESUME"
     case nextStep = "NEXT_STEP"
     case previousStep = "PREV_STEP"
+    case skipRest = "SKIP_REST"
     case end = "END"
 }
 

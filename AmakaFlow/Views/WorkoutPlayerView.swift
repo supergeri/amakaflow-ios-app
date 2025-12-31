@@ -44,16 +44,22 @@ struct WorkoutPlayerView: View {
                             }
                         )
                     )
+                } else if engine.phase == .resting {
+                    // Rest screen between exercises
+                    RestPeriodView(engine: engine)
+                        .id("rest-\(engine.currentStepIndex)")
                 } else {
                     ScrollView {
                         VStack(spacing: Theme.Spacing.lg) {
                             // Current step display
                             StepDisplayView(engine: engine)
+                                .id("step-\(engine.currentStepIndex)-\(engine.stateVersion)")
 
                             // Upcoming steps preview
                             upcomingStepsPreview
                         }
                     }
+                    .id("scroll-\(engine.currentStepIndex)")
 
                     Spacer()
 
@@ -64,6 +70,7 @@ struct WorkoutPlayerView: View {
                 }
             }
         }
+        .id("player-\(engine.stateVersion)")
         .navigationBarHidden(true)
         .statusBarHidden(engine.phase == .running)
         .confirmationDialog(
@@ -120,6 +127,10 @@ struct WorkoutPlayerView: View {
                     Text("PAUSED")
                         .font(Theme.Typography.captionBold)
                         .foregroundColor(Theme.Colors.accentRed)
+                } else if engine.phase == .resting {
+                    Text("REST")
+                        .font(Theme.Typography.captionBold)
+                        .foregroundColor(Theme.Colors.accentBlue)
                 } else if watchManager.watchHeartRate > 0 {
                     watchHeartRateView
                 } else if garminManager.isGarminHRAvailable && garminManager.garminHeartRate > 0 {

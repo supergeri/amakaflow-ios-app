@@ -294,8 +294,18 @@ extension WatchConnectivityBridge: WCSessionDelegate {
             let state = try JSONDecoder().decode(WatchWorkoutState.self, from: data)
             let previousPhase = workoutState?.phase
             let previousStepIndex = workoutState?.stepIndex
+            let previousVersion = workoutState?.stateVersion ?? 0
+
+            // Explicitly notify SwiftUI observers before updating
+            objectWillChange.send()
             workoutState = state
-            print("⌚️ Received state update: \(state.stepName), phase: \(state.phase.rawValue)")
+
+            print("⌚️ STATE UPDATE: version \(previousVersion) → \(state.stateVersion), step \(previousStepIndex ?? -1) → \(state.stepIndex), phase=\(state.phase.rawValue), name='\(state.stepName)'")
+
+            // Log if this is a meaningful change that should trigger view update
+            if previousVersion != state.stateVersion || previousStepIndex != state.stepIndex || previousPhase != state.phase {
+                print("⌚️ VIEW SHOULD REFRESH: version/step/phase changed")
+            }
 
             // Haptic feedback for phase changes
             if previousPhase != state.phase {
@@ -324,6 +334,9 @@ extension WatchConnectivityBridge: WCSessionDelegate {
                     Task {
                         await endHealthSession()
                     }
+                case .resting:
+                    // Haptic for entering rest phase
+                    playHaptic(.stop)
                 }
             }
 
