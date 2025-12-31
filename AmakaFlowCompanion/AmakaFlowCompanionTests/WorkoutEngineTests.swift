@@ -147,6 +147,8 @@ final class WorkoutEngineTests: XCTestCase {
         engine.start(workout: workout)
         XCTAssertEqual(engine.currentStepIndex, 0)
 
+        // First nextStep enters rest phase, second advances
+        engine.nextStep()
         engine.nextStep()
 
         XCTAssertEqual(engine.currentStepIndex, 1)
@@ -154,7 +156,7 @@ final class WorkoutEngineTests: XCTestCase {
 
     func testNextStepAtEndEndsWorkout() {
         let workout = createTestWorkout(intervals: [
-            .warmup(seconds: 10, target: nil)
+            .cooldown(seconds: 10, target: nil)  // Use cooldown - no rest after
         ])
         engine.start(workout: workout)
 
@@ -166,6 +168,8 @@ final class WorkoutEngineTests: XCTestCase {
     func testPreviousStep() {
         let workout = createTestWorkout()
         engine.start(workout: workout)
+        // First nextStep enters rest phase, second advances
+        engine.nextStep()
         engine.nextStep()
         XCTAssertEqual(engine.currentStepIndex, 1)
 
@@ -263,10 +267,17 @@ final class WorkoutEngineTests: XCTestCase {
     }
 
     func testProgressAtMiddle() {
-        let workout = createTestWorkout()
+        // Use a workout with no rest to simplify navigation testing
+        let workout = createTestWorkout(intervals: [
+            .cooldown(seconds: 10, target: nil),  // No rest after
+            .cooldown(seconds: 10, target: nil),  // No rest after
+            .cooldown(seconds: 10, target: nil),  // No rest after
+            .cooldown(seconds: 10, target: nil)   // No rest after
+        ])
         engine.start(workout: workout)
-        engine.nextStep()
-        engine.nextStep()
+
+        engine.nextStep()  // Advance to step 1
+        engine.nextStep()  // Advance to step 2
 
         // 3 of 4 steps = 0.75
         XCTAssertEqual(engine.progress, 0.75, accuracy: 0.01)
@@ -278,6 +289,11 @@ final class WorkoutEngineTests: XCTestCase {
 
         XCTAssertEqual(engine.formattedStepProgress, "1 of 4")
 
+        // First nextStep enters rest phase (warmup has rest after)
+        engine.nextStep()
+        XCTAssertEqual(engine.formattedStepProgress, "1 of 4") // Still on step 1 during rest
+
+        // Second nextStep advances to step 2
         engine.nextStep()
         XCTAssertEqual(engine.formattedStepProgress, "2 of 4")
     }
@@ -319,8 +335,9 @@ final class WorkoutEngineTests: XCTestCase {
 
         let flattened = flattenIntervals(intervals)
 
-        XCTAssertEqual(flattened[0].roundInfo, "Round 1 of 2")
-        XCTAssertEqual(flattened[1].roundInfo, "Round 2 of 2")
+        // Repeat blocks with a single reps exercise use "Set X of Y"
+        XCTAssertEqual(flattened[0].roundInfo, "Set 1 of 2")
+        XCTAssertEqual(flattened[1].roundInfo, "Set 2 of 2")
     }
 
     func testFlattenedIntervalStepType() {
@@ -345,6 +362,12 @@ final class WorkoutEngineTests: XCTestCase {
 
         XCTAssertEqual(engine.currentStep?.label, "Warm Up")
 
+        // First nextStep enters rest phase (warmup has rest after)
+        engine.nextStep()
+        XCTAssertEqual(engine.phase, .resting)
+        XCTAssertEqual(engine.currentStep?.label, "Warm Up") // Still on warmup during rest
+
+        // Second nextStep advances to Push-ups
         engine.nextStep()
         XCTAssertEqual(engine.currentStep?.label, "Push-ups")
     }
@@ -374,7 +397,9 @@ final class WorkoutEngineTests: XCTestCase {
         let workout = createTestWorkout()
         engine.start(workout: workout)
 
-        engine.handleRemoteCommand("NEXT_STEP", commandId: "cmd-3")
+        // First NEXT_STEP enters rest, second advances
+        engine.handleRemoteCommand("NEXT_STEP", commandId: "cmd-3a")
+        engine.handleRemoteCommand("NEXT_STEP", commandId: "cmd-3b")
 
         XCTAssertEqual(engine.currentStepIndex, 1)
     }
@@ -382,6 +407,8 @@ final class WorkoutEngineTests: XCTestCase {
     func testHandleRemoteCommandPreviousStep() {
         let workout = createTestWorkout()
         engine.start(workout: workout)
+        // Advance to step 1 first
+        engine.nextStep()
         engine.nextStep()
 
         engine.handleRemoteCommand("PREV_STEP", commandId: "cmd-4")
