@@ -13,13 +13,23 @@ struct WorkoutCompletion: Identifiable, Codable, Hashable {
     let id: String
     let workoutName: String
     let startedAt: Date
-    let endedAt: Date
+    let endedAt: Date?           // Optional - backend may not return this
     let durationSeconds: Int
     let avgHeartRate: Int?
     let maxHeartRate: Int?
     let activeCalories: Int?
     let source: CompletionSource
-    let syncedToStrava: Bool
+    let syncedToStrava: Bool?    // Optional - backend may not return this
+
+    /// Computed endedAt from startedAt + durationSeconds if not provided
+    var resolvedEndedAt: Date {
+        endedAt ?? startedAt.addingTimeInterval(TimeInterval(durationSeconds))
+    }
+
+    /// Strava sync status with default false if not provided
+    var isSyncedToStrava: Bool {
+        syncedToStrava ?? false
+    }
 
     enum CompletionSource: String, Codable {
         case appleWatch = "apple_watch"
