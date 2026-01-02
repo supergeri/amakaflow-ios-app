@@ -74,6 +74,7 @@
 		F8C125B22EFAC00000459747 /* ConnectIQ in Frameworks */ = {isa = PBXBuildFile; productRef = F8C125B12EFAC00000459747 /* ConnectIQ */; };
 		D3BUG10G00000001C0000001 /* DebugLogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3BUG10G00000001B0000001 /* DebugLogService.swift */; };
 		D3BUG10G00000002C0000002 /* DebugLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3BUG10G00000002B0000002 /* DebugLogView.swift */; };
+		S3NTR1S3RV1C300000002 /* SentryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = S3NTR1S3RV1C300000001 /* SentryService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -214,6 +215,7 @@
 		F8FC29620578214144920365 /* AudioCueManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AudioCueManager.swift; path = ../AmakaFlow/Services/AudioCueManager.swift; sourceTree = SOURCE_ROOT; };
 		D3BUG10G00000001B0000001 /* DebugLogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DebugLogService.swift; path = ../AmakaFlow/Services/DebugLogService.swift; sourceTree = SOURCE_ROOT; };
 		D3BUG10G00000002B0000002 /* DebugLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DebugLogView.swift; path = ../AmakaFlow/Views/DebugLogView.swift; sourceTree = SOURCE_ROOT; };
+		S3NTR1S3RV1C300000001 /* SentryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SentryService.swift; path = ../AmakaFlow/Services/SentryService.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -361,6 +363,7 @@
 				F8C125A02EFAB01000459747 /* GarminConnectManager.swift */,
 				D3BUG10G00000001B0000001 /* DebugLogService.swift */,
 				D3BUG10G00000002B0000002 /* DebugLogView.swift */,
+				S3NTR1S3RV1C300000001 /* SentryService.swift */,
 				F883912261E9D246979DD881 /* WorkoutState.swift */,
 				F82258553831E24BC9B8C650 /* FlattenedInterval.swift */,
 				F856B28A238E234FDAB29478 /* WorkoutEngine.swift */,
@@ -791,6 +794,7 @@
 				F84E22722ED0D56C00459747 /* Workout.swift in Sources */,
 				D3BUG10G00000001C0000001 /* DebugLogService.swift in Sources */,
 				D3BUG10G00000002C0000002 /* DebugLogView.swift in Sources */,
+				S3NTR1S3RV1C300000002 /* SentryService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

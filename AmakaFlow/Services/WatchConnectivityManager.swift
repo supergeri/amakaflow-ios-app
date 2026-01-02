@@ -47,7 +47,12 @@ class WatchConnectivityManager: NSObject, ObservableObject {
 
     private func logWatchError(_ title: String, details: String, metadata: [String: String]? = nil) {
         Task { @MainActor in
+            // Log to debug service
             DebugLogService.shared.logWatchError(title: title, details: details, metadata: metadata)
+
+            // Capture to Sentry (AMA-225)
+            let error = WatchConnectivityError.sessionNotAvailable
+            SentryService.shared.captureWatchError(error, context: "\(title): \(details)")
         }
     }
     
@@ -249,6 +254,10 @@ extension WatchConnectivityManager: WCSessionDelegate {
         DispatchQueue.main.async {
             self.isWatchReachable = session.isReachable
             print("⌚️ Watch reachability changed: \(session.isReachable)")
+
+            // Track connection state (AMA-225)
+            let action = session.isReachable ? "connected" : "disconnected"
+            SentryService.shared.trackDeviceConnection("Apple Watch", action: action)
         }
     }
     

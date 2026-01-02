@@ -53,12 +53,22 @@ class APIService {
 
     private func logError(endpoint: String, method: String, statusCode: Int?, response: String?, error: Error?) {
         Task { @MainActor in
+            // Log to debug service
             DebugLogService.shared.logAPIError(
                 endpoint: endpoint,
                 method: method,
                 statusCode: statusCode,
                 response: response,
                 error: error
+            )
+
+            // Capture to Sentry (AMA-225)
+            let apiError = error ?? APIError.serverError(statusCode ?? 0)
+            SentryService.shared.captureAPIError(
+                apiError,
+                endpoint: "\(method) \(endpoint)",
+                statusCode: statusCode,
+                responseBody: response
             )
         }
     }

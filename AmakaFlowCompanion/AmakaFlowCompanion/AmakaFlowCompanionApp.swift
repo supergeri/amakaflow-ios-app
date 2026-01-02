@@ -10,6 +10,11 @@ import SwiftUI
 @main
 struct AmakaFlowCompanionApp: App {
     @ObservedObject private var pairingService = PairingService.shared
+
+    init() {
+        // Initialize error tracking (AMA-225)
+        SentryService.shared.initialize()
+    }
     @StateObject private var workoutsViewModel = WorkoutsViewModel()
     @StateObject private var watchConnectivity = WatchConnectivityManager.shared
     @StateObject private var garminConnectivity = GarminConnectManager.shared

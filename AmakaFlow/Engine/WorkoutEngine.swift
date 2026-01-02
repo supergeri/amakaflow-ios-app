@@ -91,6 +91,9 @@ class WorkoutEngine: ObservableObject {
         self.stateVersion += 1
         self.workoutStartTime = Date()
 
+        // Track workout start (AMA-225)
+        SentryService.shared.trackWorkoutAction("Started workout", workoutId: workout.id, workoutName: workout.name)
+
         print("🏋️ Starting workout: \(workout.name)")
         print("🏋️ Intervals count: \(workout.intervals.count)")
         print("🏋️ Flattened steps count: \(flattenedSteps.count)")
@@ -117,6 +120,9 @@ class WorkoutEngine: ObservableObject {
         stateVersion += 1
         broadcastState()
         audioCueManager.announcePaused()
+
+        // Track pause (AMA-225)
+        SentryService.shared.trackWorkoutAction("Paused workout", workoutId: workout?.id, workoutName: workout?.name)
     }
 
     func resume() {
@@ -127,6 +133,9 @@ class WorkoutEngine: ObservableObject {
         stateVersion += 1
         broadcastState()
         audioCueManager.announceResumed()
+
+        // Track resume (AMA-225)
+        SentryService.shared.trackWorkoutAction("Resumed workout", workoutId: workout?.id, workoutName: workout?.name)
     }
 
     func togglePlayPause() {
@@ -301,6 +310,10 @@ class WorkoutEngine: ObservableObject {
         print("🏋️ END called with reason: \(reason)")
         print("🏋️ currentStepIndex: \(currentStepIndex), flattenedSteps.count: \(flattenedSteps.count)")
         Thread.callStackSymbols.prefix(10).forEach { print("🏋️ \($0)") }
+
+        // Track workout end (AMA-225)
+        let endAction = reason == .completed ? "Completed workout" : "Ended workout (\(reason))"
+        SentryService.shared.trackWorkoutAction(endAction, workoutId: workout?.id, workoutName: workout?.name)
 
         // Capture workout data before resetting state
         let workoutData = (

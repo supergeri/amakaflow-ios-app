@@ -175,6 +175,12 @@ class PairingService: ObservableObject {
                 self.isPaired = true
                 self.userProfile = result.profile
                 self.needsReauth = false
+
+                // Set Sentry user context for error tracking (AMA-225)
+                if let profile = result.profile {
+                    SentryService.shared.setUser(userId: profile.id, email: profile.email)
+                    SentryService.shared.trackPairingAction("Device paired successfully")
+                }
             }
             // Process any queued workout completions after re-pairing
             Task {
@@ -212,6 +218,10 @@ class PairingService: ObservableObject {
         Task { @MainActor in
             self.isPaired = false
             self.userProfile = nil
+
+            // Clear Sentry user context (AMA-225)
+            SentryService.shared.trackPairingAction("Device unpaired")
+            SentryService.shared.clearUser()
         }
     }
 
