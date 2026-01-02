@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Sentry
 
 @main
 struct AmakaFlowCompanionApp: App {
@@ -13,6 +14,32 @@ struct AmakaFlowCompanionApp: App {
     @StateObject private var workoutsViewModel = WorkoutsViewModel()
     @StateObject private var watchConnectivity = WatchConnectivityManager.shared
     @StateObject private var garminConnectivity = GarminConnectManager.shared
+
+    init() {
+        // Initialize Sentry error tracking (AMA-225)
+        SentrySDK.start { options in
+            options.dsn = "https://7fa7415e248b5a064d84f74679719797@o951666.ingest.us.sentry.io/4510638875017216"
+
+            // Adds IP for users
+            options.sendDefaultPii = true
+
+            // Performance monitoring (reduce in production)
+            options.tracesSampleRate = 1.0
+
+            // Profiling
+            options.configureProfiling = {
+                $0.sessionSampleRate = 1.0
+                $0.lifecycle = .trace
+            }
+
+            // Screenshots and view hierarchy for debugging
+            options.attachScreenshot = true
+            options.attachViewHierarchy = true
+
+            // Enable experimental logging
+            options.experimental.enableLogs = true
+        }
+    }
 
     var body: some Scene {
         WindowGroup {

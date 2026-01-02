@@ -324,6 +324,7 @@ class GarminConnectManager: NSObject, ObservableObject {
             isConnected = true
             // Note: Don't call registerForAppMessages here - let deviceStatusChanged be the canonical path
             lastDebugAction = "Device connected"
+            SentryService.shared.trackDeviceConnection("Garmin", action: "connected")
 
         case .notConnected:
             log("⚠️ Device is NOT CONNECTED - waiting for connection")
@@ -332,6 +333,7 @@ class GarminConnectManager: NSObject, ObservableObject {
             isConnected = false
             isAppInstalled = false
             lastDebugAction = "Device not connected"
+            SentryService.shared.trackDeviceConnection("Garmin", action: "disconnected")
 
         case .bluetoothNotReady:
             log("⚠️ Bluetooth NOT READY")
@@ -377,6 +379,7 @@ class GarminConnectManager: NSObject, ObservableObject {
         guard let uuid = UUID(uuidString: uuidString) else {
             print("⌚ [DEBUG] Invalid UUID format: \(uuidString)")
             lastError = GarminConnectError.invalidDeviceUUID
+            SentryService.shared.captureGarminError(GarminConnectError.invalidDeviceUUID, context: "Invalid UUID: \(uuidString)")
             return false
         }
 
@@ -697,6 +700,7 @@ class GarminConnectManager: NSObject, ObservableObject {
                     print("⌚ [DEBUG] Failed to send state to Garmin: \(result.rawValue)")
                     Task { @MainActor in
                         self.lastError = GarminConnectError.messageFailed
+                        SentryService.shared.captureGarminError(GarminConnectError.messageFailed, context: "Send state failed: \(result.rawValue)")
                     }
                 } else {
                     print("⌚ [DEBUG] Successfully sent state to Garmin")

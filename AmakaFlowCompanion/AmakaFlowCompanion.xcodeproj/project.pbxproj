@@ -74,6 +74,8 @@
 		F8C125B22EFAC00000459747 /* ConnectIQ in Frameworks */ = {isa = PBXBuildFile; productRef = F8C125B12EFAC00000459747 /* ConnectIQ */; };
 		D3BUG10G00000001C0000001 /* DebugLogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3BUG10G00000001B0000001 /* DebugLogService.swift */; };
 		D3BUG10G00000002C0000002 /* DebugLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3BUG10G00000002B0000002 /* DebugLogView.swift */; };
+		S3NTR1S3RV1C300000002 /* SentryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = S3NTR1S3RV1C300000001 /* SentryService.swift */; };
+		0B82E5ED1C34442389BC7768 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 2F0C8DCE03694CF3A60D12F9 /* Sentry */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -214,6 +216,7 @@
 		F8FC29620578214144920365 /* AudioCueManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AudioCueManager.swift; path = ../AmakaFlow/Services/AudioCueManager.swift; sourceTree = SOURCE_ROOT; };
 		D3BUG10G00000001B0000001 /* DebugLogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DebugLogService.swift; path = ../AmakaFlow/Services/DebugLogService.swift; sourceTree = SOURCE_ROOT; };
 		D3BUG10G00000002B0000002 /* DebugLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DebugLogView.swift; path = ../AmakaFlow/Views/DebugLogView.swift; sourceTree = SOURCE_ROOT; };
+		S3NTR1S3RV1C300000001 /* SentryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SentryService.swift; path = ../AmakaFlow/Services/SentryService.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -297,6 +300,7 @@
 				F84E22992ED0DA1F00459747 /* WorkoutKitSync in Frameworks */,
 				F8C125B22EFAC00000459747 /* ConnectIQ in Frameworks */,
 				F84E22972ED0DA0F00459747 /* WatchConnectivity.framework in Frameworks */,
+				0B82E5ED1C34442389BC7768 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -304,6 +308,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B82E5ED1C34442389BC7768 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -311,6 +316,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B82E5ED1C34442389BC7768 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -322,6 +328,7 @@
 				F84E229B2ED0DC0900459747 /* HealthKit.framework in Frameworks */,
 				F84E22A12ED0DC2700459747 /* WorkoutKitSync in Frameworks */,
 				F84E229D2ED0DC1100459747 /* WatchConnectivity.framework in Frameworks */,
+				0B82E5ED1C34442389BC7768 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -329,6 +336,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B82E5ED1C34442389BC7768 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -336,6 +344,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B82E5ED1C34442389BC7768 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -345,6 +354,7 @@
 			files = (
 				F8B356C72EF8BA7B00E88B51 /* SwiftUI.framework in Frameworks */,
 				F8B356C52EF8BA7B00E88B51 /* WidgetKit.framework in Frameworks */,
+				0B82E5ED1C34442389BC7768 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -361,6 +371,7 @@
 				F8C125A02EFAB01000459747 /* GarminConnectManager.swift */,
 				D3BUG10G00000001B0000001 /* DebugLogService.swift */,
 				D3BUG10G00000002B0000002 /* DebugLogView.swift */,
+				S3NTR1S3RV1C300000001 /* SentryService.swift */,
 				F883912261E9D246979DD881 /* WorkoutState.swift */,
 				F82258553831E24BC9B8C650 /* FlattenedInterval.swift */,
 				F856B28A238E234FDAB29478 /* WorkoutEngine.swift */,
@@ -461,6 +472,7 @@
 				F84E21722ED0B0C800459747 /* Resources */,
 				F8B356D92EF8BA7C00E88B51 /* Embed Foundation Extensions */,
 				F8B358B22EF9C7B000E88B51 /* Embed Watch Content */,
+				BA612D7EA9704AF3B2F09E08 /* Upload Debug Symbols to Sentry */,
 			);
 			buildRules = (
 			);
@@ -475,6 +487,7 @@
 			packageProductDependencies = (
 				F84E22982ED0DA1F00459747 /* WorkoutKitSync */,
 				F8C125B12EFAC00000459747 /* ConnectIQ */,
+				2F0C8DCE03694CF3A60D12F9 /* Sentry */,
 			);
 			productName = AmakaFlowCompanion;
 			productReference = F84E21742ED0B0C800459747 /* AmakaFlowCompanion.app */;
@@ -666,6 +679,7 @@
 			packageReferences = (
 				F84E225F2ED0B84300459747 /* XCLocalSwiftPackageReference "../../../workoutkit-sync" */,
 				F8C125B02EFAC00000459747 /* XCLocalSwiftPackageReference "../Vendor/ConnectIQ" */,
+				6EFD6A06E1264416B1103D42 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F84E21752ED0B0C800459747 /* Products */;
@@ -791,6 +805,7 @@
 				F84E22722ED0D56C00459747 /* Workout.swift in Sources */,
 				D3BUG10G00000001C0000001 /* DebugLogService.swift in Sources */,
 				D3BUG10G00000002C0000002 /* DebugLogView.swift in Sources */,
+				S3NTR1S3RV1C300000002 /* SentryService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1031,6 +1046,8 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_USER_SCRIPT_SANDBOXING = "NO";
 			};
 			name = Debug;
 		};
@@ -1069,6 +1086,8 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_USER_SCRIPT_SANDBOXING = "NO";
 			};
 			name = Release;
 		};
@@ -1486,7 +1505,52 @@
 			package = F8C125B02EFAC00000459747 /* XCLocalSwiftPackageReference "../Vendor/ConnectIQ" */;
 			productName = ConnectIQ;
 		};
+		2F0C8DCE03694CF3A60D12F9 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6EFD6A06E1264416B1103D42 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
+		};
 /* End XCSwiftPackageProductDependency section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		BA612D7EA9704AF3B2F09E08 /* Upload Debug Symbols to Sentry */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script is responsible for uploading debug symbols and source context for Sentry.
+if which sentry-cli >/dev/null; then
+  export SENTRY_ORG=me-6o
+  export SENTRY_PROJECT=amakaflow-ios
+  ERROR=$(sentry-cli debug-files upload --include-sources \"$DWARF_DSYM_FOLDER_PATH\" 2>&1 >/dev/null)
+  if [ ! $? -eq 0 ]; then
+    echo \"warning: sentry-cli - $ERROR\"
+  fi
+else
+  echo \"warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases\"
+fi
+";
+			name = "Upload Debug Symbols to Sentry";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		6EFD6A06E1264416B1103D42 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa/";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = F84E216C2ED0B0C800459747 /* Project object */;
 }
