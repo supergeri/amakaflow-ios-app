@@ -287,6 +287,11 @@ extension WatchConnectivityBridge: WCSessionDelegate {
         case "commandAck":
             handleCommandAck(message)
 
+        case "cleared":
+            // applicationContext was cleared (workout is running, state sent via message only)
+            // No action needed - this prevents phantom "Open on iPhone" card
+            print("⌚️ Received cleared applicationContext (workout running)")
+
         default:
             print("⌚️ Unknown action: \(action)")
         }
@@ -318,32 +323,20 @@ extension WatchConnectivityBridge: WCSessionDelegate {
             }
 
             // Haptic feedback for phase changes
+            // NOTE: We do NOT start HKWorkoutSession here for remote control mode.
+            // Starting an HKWorkoutSession on Watch when controlling an iPhone workout
+            // causes watchOS to show a phantom "Open on iPhone" card (AMA-223).
+            // Health tracking should only happen for standalone workouts via StandaloneWorkoutEngine.
             if previousPhase != state.phase {
                 switch state.phase {
                 case .running:
                     playHaptic(.start)
-                    // Start health session when workout starts
-                    if previousPhase == nil || previousPhase == .idle {
-                        Task {
-                            await startHealthSession()
-                        }
-                    } else if previousPhase == .paused {
-                        healthManager.resumeSession()
-                    }
                 case .paused:
                     playHaptic(.stop)
-                    healthManager.pauseSession()
                 case .ended:
                     playHaptic(.success)
-                    // End health session when workout ends
-                    Task {
-                        await endHealthSession()
-                    }
                 case .idle:
-                    // Also end session if going to idle
-                    Task {
-                        await endHealthSession()
-                    }
+                    break
                 case .resting:
                     // Haptic for entering rest phase
                     playHaptic(.stop)
