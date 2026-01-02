@@ -14,7 +14,8 @@ import Network
 
 struct WorkoutCompletionRequest: Codable {
     let workoutEventId: String?
-    let followAlongWorkoutId: String?
+    let workoutId: String?              // For regular workouts from /ios-companion/pending
+    let followAlongWorkoutId: String?   // For follow-along video workouts
     let startedAt: String  // ISO8601
     let endedAt: String    // ISO8601
     let healthMetrics: HealthMetrics
@@ -24,6 +25,7 @@ struct WorkoutCompletionRequest: Codable {
 
     enum CodingKeys: String, CodingKey {
         case workoutEventId = "workout_event_id"
+        case workoutId = "workout_id"
         case followAlongWorkoutId = "follow_along_workout_id"
         case startedAt = "started_at"
         case endedAt = "ended_at"
@@ -72,12 +74,21 @@ struct HRSample: Codable {
 }
 
 struct WorkoutCompletionResponse: Codable {
-    let completionId: String
-    let status: String
+    let completionId: String?
+    let id: String?           // Alternative field name
+    let status: String?
+    let success: Bool?
 
     enum CodingKeys: String, CodingKey {
         case completionId = "completion_id"
+        case id
         case status
+        case success
+    }
+
+    /// Get the completion ID from whichever field is present
+    var resolvedCompletionId: String {
+        completionId ?? id ?? "unknown"
     }
 }
 
@@ -118,6 +129,12 @@ class WorkoutCompletionService: ObservableObject {
         setupNetworkMonitoring()
     }
 
+    // MARK: - Debug Logging
+
+    private func logCompletionError(workoutId: String?, error: Error, context: String) {
+        DebugLogService.shared.logCompletionError(workoutId: workoutId, error: error, context: context)
+    }
+
     // MARK: - Public API
 
     /// Post workout completion from phone-controlled workout
@@ -148,7 +165,8 @@ class WorkoutCompletionService: ObservableObject {
 
         let request = WorkoutCompletionRequest(
             workoutEventId: nil,
-            followAlongWorkoutId: workoutId,
+            workoutId: workoutId,
+            followAlongWorkoutId: nil,
             startedAt: formatISO8601(startedAt),
             endedAt: formatISO8601(endedAt),
             healthMetrics: healthMetrics,
@@ -180,7 +198,8 @@ class WorkoutCompletionService: ObservableObject {
 
         let request = WorkoutCompletionRequest(
             workoutEventId: nil,
-            followAlongWorkoutId: summary.workoutId,
+            workoutId: summary.workoutId,
+            followAlongWorkoutId: nil,
             startedAt: formatISO8601(summary.startDate),
             endedAt: formatISO8601(summary.endDate),
             healthMetrics: healthMetrics,
@@ -218,7 +237,8 @@ class WorkoutCompletionService: ObservableObject {
 
         let request = WorkoutCompletionRequest(
             workoutEventId: nil,
-            followAlongWorkoutId: workoutId,
+            workoutId: workoutId,
+            followAlongWorkoutId: nil,
             startedAt: formatISO8601(startedAt),
             endedAt: formatISO8601(endedAt),
             healthMetrics: healthMetrics,
@@ -235,6 +255,11 @@ class WorkoutCompletionService: ObservableObject {
         guard !isProcessingQueue else { return }
         guard isNetworkAvailable else {
             print("[WorkoutCompletion] Network unavailable, skipping retry")
+            return
+        }
+        // Don't retry if auth is invalid - wait for user to re-pair
+        guard !PairingService.shared.needsReauth else {
+            print("[WorkoutCompletion] Auth invalid, skipping retry until re-paired")
             return
         }
 
@@ -279,17 +304,23 @@ class WorkoutCompletionService: ObservableObject {
         if isNetworkAvailable {
             do {
                 let response = try await APIService.shared.postWorkoutCompletion(request)
-                print("[WorkoutCompletion] Successfully posted completion: \(response.completionId)")
+                print("[WorkoutCompletion] Successfully posted completion: \(response.resolvedCompletionId)")
                 return response
             } catch {
                 print("[WorkoutCompletion] Failed to post, queueing for retry: \(error)")
                 lastError = error
+                logCompletionError(workoutId: request.workoutId ?? request.followAlongWorkoutId, error: error, context: "postCompletion")
                 queueForRetry(request)
                 throw error
             }
         } else {
             // Queue for later
             print("[WorkoutCompletion] Network unavailable, queueing for later")
+            logCompletionError(
+                workoutId: request.workoutId ?? request.followAlongWorkoutId,
+                error: NSError(domain: "WorkoutCompletion", code: -1, userInfo: [NSLocalizedDescriptionKey: "Network unavailable"]),
+                context: "Network unavailable - queued for later"
+            )
             queueForRetry(request)
             return nil
         }

@@ -643,6 +643,13 @@ struct SettingsView: View {
         return Theme.Colors.textSecondary
     }
 
+    private func formatRefreshDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+
     // MARK: - Manual UUID Entry Sheet
 
     private var manualUUIDSheet: some View {
@@ -1216,18 +1223,27 @@ struct SettingsView: View {
                     Spacer()
 
                     // Connection status badge
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(Theme.Colors.accentGreen)
-                            .frame(width: 8, height: 8)
-                        Text("Connected")
-                            .font(Theme.Typography.footnote)
+                    VStack(alignment: .trailing, spacing: 2) {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(Theme.Colors.accentGreen)
+                                .frame(width: 8, height: 8)
+                            Text("Connected")
+                                .font(Theme.Typography.footnote)
+                        }
+                        .foregroundColor(Theme.Colors.accentGreen)
+                        .padding(.horizontal, Theme.Spacing.sm)
+                        .padding(.vertical, 4)
+                        .background(Theme.Colors.accentGreen.opacity(0.1))
+                        .cornerRadius(Theme.CornerRadius.sm)
+
+                        // Token refresh timestamp
+                        if let refreshDate = pairingService.lastTokenRefresh {
+                            Text("Refreshed: \(formatRefreshDate(refreshDate))")
+                                .font(.system(size: 9))
+                                .foregroundColor(Theme.Colors.textTertiary)
+                        }
                     }
-                    .foregroundColor(Theme.Colors.accentGreen)
-                    .padding(.horizontal, Theme.Spacing.sm)
-                    .padding(.vertical, 4)
-                    .background(Theme.Colors.accentGreen.opacity(0.1))
-                    .cornerRadius(Theme.CornerRadius.sm)
                 }
 
                 // Environment info
@@ -1274,6 +1290,52 @@ struct SettingsView: View {
                             .padding(.vertical, 4)
                             .background(Theme.Colors.accentBlue)
                             .cornerRadius(Theme.CornerRadius.sm)
+                    }
+                }
+
+                // Debug: Refresh Token
+                HStack {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .font(.system(size: 14))
+                        .foregroundColor(Theme.Colors.textTertiary)
+                    Text("Refresh Token")
+                        .font(Theme.Typography.caption)
+                        .foregroundColor(Theme.Colors.textTertiary)
+                    Spacer()
+                    Button {
+                        Task {
+                            let success = await pairingService.refreshToken()
+                            print("[Settings] Manual token refresh: \(success ? "SUCCESS" : "FAILED")")
+                        }
+                    } label: {
+                        Text("Refresh")
+                            .font(Theme.Typography.caption)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, Theme.Spacing.sm)
+                            .padding(.vertical, 4)
+                            .background(Theme.Colors.accentGreen)
+                            .cornerRadius(Theme.CornerRadius.sm)
+                    }
+                }
+
+                // Debug: Error Log
+                NavigationLink {
+                    DebugLogView()
+                } label: {
+                    HStack {
+                        Image(systemName: "ladybug")
+                            .font(.system(size: 14))
+                            .foregroundColor(Theme.Colors.accentOrange)
+                        Text("Debug Log")
+                            .font(Theme.Typography.caption)
+                            .foregroundColor(Theme.Colors.textTertiary)
+                        Spacer()
+                        Text("\(DebugLogService.shared.entries.count)")
+                            .font(.system(size: 11, design: .monospaced))
+                            .foregroundColor(Theme.Colors.accentOrange)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12))
+                            .foregroundColor(Theme.Colors.textTertiary)
                     }
                 }
                 #endif
