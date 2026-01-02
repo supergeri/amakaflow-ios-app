@@ -214,29 +214,17 @@ extension APIService {
 
         switch httpResponse.statusCode {
         case 200:
-            let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = APIService.makeDecoder()
 
             // Try wrapped format first: { "success": true, "completion": {...} }
             do {
                 let wrappedResponse = try decoder.decode(CompletionDetailResponse.self, from: data)
                 print("[CompletionDetail] Successfully decoded wrapped completion detail")
                 return wrappedResponse.completion
-            } catch {
-                // Fall back to direct decode
-                print("[CompletionDetail] Wrapped decode failed, trying direct: \(error)")
-            }
-
-            // Try direct decode
-            do {
-                let detail = try decoder.decode(WorkoutCompletionDetail.self, from: data)
-                print("[CompletionDetail] Successfully decoded direct completion detail")
-                return detail
-            } catch let decodingError as DecodingError {
-                // Log detailed decoding error
+            } catch let wrappedError as DecodingError {
+                // Log detailed wrapped decode error
                 var errorMsg = ""
-                switch decodingError {
+                switch wrappedError {
                 case .typeMismatch(let type, let context):
                     errorMsg = "Type mismatch: expected \(String(describing: type)) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
                 case .valueNotFound(let type, let context):
@@ -246,23 +234,22 @@ extension APIService {
                 case .dataCorrupted(let context):
                     errorMsg = "Data corrupted at \(context.codingPath.map { $0.stringValue }.joined(separator: ".")): \(context.debugDescription)"
                 @unknown default:
-                    errorMsg = "Unknown decode error: \(decodingError.localizedDescription)"
+                    errorMsg = "Unknown: \(wrappedError.localizedDescription)"
                 }
-                print("[CompletionDetail] DECODE ERROR: \(errorMsg)")
-                print("[CompletionDetail] Response was: \(responseBody.prefix(500))")
-                detailLogger.error("fetchCompletionDetail - \(errorMsg)")
+                print("[CompletionDetail] Wrapped decode failed: \(errorMsg)")
 
-                // Log to DebugLogService for in-app visibility
+                // Log to DebugLogService for visibility
                 Task { @MainActor in
-                    DebugLogService.shared.logAPIError(
-                        endpoint: "/workouts/completions/\(id)",
-                        method: "GET",
-                        statusCode: 200,
-                        response: String(responseBody.prefix(500)),
-                        error: decodingError
+                    DebugLogService.shared.log(
+                        "WRAPPED DECODE: \(errorMsg)",
+                        details: String(responseBody.prefix(2000)),
+                        metadata: ["Endpoint": "/workouts/completions/\(id)"]
                     )
                 }
-                throw APIError.decodingError(decodingError)
+                throw wrappedError  // Don't try direct decode, the wrapped format is what backend returns
+            } catch {
+                print("[CompletionDetail] Wrapped decode failed with non-decoding error: \(error)")
+                throw error
             }
         case 401:
             throw APIError.unauthorized
