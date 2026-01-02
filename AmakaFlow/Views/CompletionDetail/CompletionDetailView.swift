@@ -41,6 +41,9 @@ struct CompletionDetailView: View {
                     if viewModel.showStravaToast {
                         stravaToast
                     }
+                    if viewModel.showSaveToast {
+                        saveToast
+                    }
                 }
         }
     }
@@ -78,12 +81,19 @@ struct CompletionDetailView: View {
                     )
                 }
 
-                // Summary Metrics
-                if detail.hasSummaryMetrics {
-                    MetricGridView.summary(
-                        duration: detail.formattedDuration,
+                // Activity Metrics (calories, steps, distance)
+                if detail.hasSummaryMetrics || detail.distanceMeters != nil {
+                    MetricGridView.activity(
                         calories: detail.formattedCalories,
-                        steps: detail.formattedSteps
+                        steps: detail.formattedSteps,
+                        distance: detail.formattedDistance
+                    )
+                } else {
+                    // Empty state for activity metrics
+                    emptyMetricsSection(
+                        icon: "figure.run",
+                        title: "No Activity Data",
+                        message: "Activity metrics like calories, steps, and distance were not recorded for this workout."
                     )
                 }
 
@@ -101,8 +111,18 @@ struct CompletionDetailView: View {
                     HRZonesView(zones: viewModel.hrZones)
                 }
 
+                // Workout Steps (AMA-224)
+                if detail.hasWorkoutSteps {
+                    WorkoutStepsSection(steps: detail.flattenedSteps)
+                }
+
                 // Details Section
                 detailsSection(detail)
+
+                // Save to Library Button (for voice-added workouts)
+                if viewModel.canSaveToLibrary {
+                    saveToLibraryButton
+                }
 
                 // Strava Button
                 stravaButton
@@ -117,16 +137,74 @@ struct CompletionDetailView: View {
     // MARK: - Header Section
 
     private func headerSection(_ detail: WorkoutCompletionDetail) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
+            // Workout name
             Text(detail.workoutName)
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(.primary)
                 .multilineTextAlignment(.center)
 
-            Text(detail.formattedDateTime)
+            // Date
+            Text(detail.formattedFullDate)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
+
+            // Prominent duration display
+            VStack(spacing: 4) {
+                Text(detail.formattedDuration)
+                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+
+                Text("Duration")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 8)
+
+            // Time range (start → end)
+            HStack(spacing: 8) {
+                Image(systemName: "clock")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+
+                Text(detail.formattedStartTime)
+                    .foregroundColor(.secondary)
+
+                Image(systemName: "arrow.right")
+                    .foregroundColor(.secondary)
+                    .font(.caption2)
+
+                Text(detail.resolvedEndedAt.formatted(date: .omitted, time: .shortened))
+                    .foregroundColor(.secondary)
+            }
+            .font(.subheadline)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Theme.Colors.surface)
+        .cornerRadius(12)
+    }
+
+    // MARK: - Empty Metrics Section
+
+    private func emptyMetricsSection(icon: String, title: String, message: String) -> some View {
+        VStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.title)
+                .foregroundColor(.secondary)
+
+            VStack(spacing: 4) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+
+                Text(message)
+                    .font(.caption)
+                    .foregroundColor(.secondary.opacity(0.8))
+                    .multilineTextAlignment(.center)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding()
@@ -157,20 +235,6 @@ struct CompletionDetailView: View {
                         valueColor: .green
                     )
                 }
-
-                detailRow(
-                    icon: "calendar",
-                    label: "Completed",
-                    value: detail.formattedFullDate
-                )
-
-                if let distance = detail.formattedDistance {
-                    detailRow(
-                        icon: "map",
-                        label: "Distance",
-                        value: distance
-                    )
-                }
             }
         }
         .padding()
@@ -193,6 +257,34 @@ struct CompletionDetailView: View {
                 .foregroundColor(valueColor)
         }
         .font(.subheadline)
+    }
+
+    // MARK: - Save to Library Button
+
+    private var saveToLibraryButton: some View {
+        Button {
+            Task {
+                await viewModel.saveToLibrary()
+            }
+        } label: {
+            HStack {
+                if viewModel.isSavingToLibrary {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(0.8)
+                } else {
+                    Image(systemName: "plus.circle.fill")
+                }
+                Text(viewModel.isSavingToLibrary ? "Saving..." : "Save to My Workouts")
+            }
+            .font(.headline)
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Theme.Colors.accentBlue)
+            .cornerRadius(12)
+        }
+        .disabled(viewModel.isSavingToLibrary)
     }
 
     // MARK: - Strava Button
@@ -233,6 +325,29 @@ struct CompletionDetailView: View {
         }
         .transition(.move(edge: .bottom).combined(with: .opacity))
         .animation(.easeInOut, value: viewModel.showStravaToast)
+    }
+
+    // MARK: - Save Toast
+
+    private var saveToast: some View {
+        VStack {
+            Spacer()
+
+            HStack {
+                Image(systemName: viewModel.saveToastMessage.contains("Failed") ? "xmark.circle.fill" : "checkmark.circle.fill")
+                    .foregroundColor(viewModel.saveToastMessage.contains("Failed") ? .red : .green)
+                Text(viewModel.saveToastMessage)
+            }
+            .font(.subheadline)
+            .foregroundColor(.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color.black.opacity(0.8))
+            .cornerRadius(8)
+            .padding(.bottom, 50)
+        }
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .animation(.easeInOut, value: viewModel.showSaveToast)
     }
 
     // MARK: - Loading View
