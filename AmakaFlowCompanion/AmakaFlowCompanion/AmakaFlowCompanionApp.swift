@@ -16,6 +16,16 @@ struct AmakaFlowCompanionApp: App {
     @StateObject private var garminConnectivity = GarminConnectManager.shared
 
     init() {
+        // Handle E2E test auth bypass (AMA-232)
+        #if DEBUG
+        if CommandLine.arguments.contains("--uitesting") && CommandLine.arguments.contains("--skip-pairing") {
+            if let testToken = ProcessInfo.processInfo.environment["TEST_JWT"] {
+                try? pairingService.storeToken(testToken)
+                print("[E2E] Test auth configured with JWT from environment")
+            }
+        }
+        #endif
+
         // Initialize Sentry error tracking (AMA-225)
         SentrySDK.start { options in
             options.dsn = "https://7fa7415e248b5a064d84f74679719797@o951666.ingest.us.sentry.io/4510638875017216"
