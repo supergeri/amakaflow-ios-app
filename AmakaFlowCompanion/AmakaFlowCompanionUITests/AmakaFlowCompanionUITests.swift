@@ -2,40 +2,58 @@
 //  AmakaFlowCompanionUITests.swift
 //  AmakaFlowCompanionUITests
 //
-//  Created by DAVID ANDREWS on 11/21/25.
+//  Base UI tests for AmakaFlow Companion (AMA-232)
 //
 
 import XCTest
 
+/// Base UI tests for app functionality
 final class AmakaFlowCompanionUITests: XCTestCase {
 
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    var app: XCUIApplication!
 
-        // In UI tests it is usually best to stop immediately when a failure occurs.
+    override func setUpWithError() throws {
         continueAfterFailure = false
 
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
+        app = XCUIApplication()
+        TestAuthHelper.configureApp(app)
     }
 
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        app = nil
     }
 
+    // MARK: - Basic App Tests
+
+    /// Test that app launches successfully with test credentials
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
-        let app = XCUIApplication()
+    func testAppLaunches() throws {
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        // App should launch without crashing
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10))
     }
 
+    /// Test that app shows main content (not pairing) with injected credentials
+    @MainActor
+    func testAppShowsMainContent() throws {
+        app.launch()
+
+        // Wait for main UI to appear
+        // With test credentials, we should NOT see the pairing view
+        let pairingTitle = app.staticTexts["Pair with AmakaFlow"]
+        let isPairingVisible = pairingTitle.waitForExistence(timeout: 3)
+
+        XCTAssertFalse(isPairingVisible, "Pairing view should not be shown with test credentials")
+    }
+
+    /// Measure app launch performance with test credentials
     @MainActor
     func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
+            let testApp = XCUIApplication()
+            TestAuthHelper.configureApp(testApp)
+            testApp.launch()
         }
     }
 }

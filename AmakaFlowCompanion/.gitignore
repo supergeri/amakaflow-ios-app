@@ -1,1 +1,4 @@
 .sentryclirc
+
+# E2E Test Credentials (contains sensitive tokens)
+AmakaFlowCompanionUITests/TestCredentials.swift

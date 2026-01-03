@@ -2,11 +2,12 @@
 //  AmakaFlowCompanionUITestsLaunchTests.swift
 //  AmakaFlowCompanionUITests
 //
-//  Created by DAVID ANDREWS on 11/21/25.
+//  Launch tests for AmakaFlow Companion (AMA-232)
 //
 
 import XCTest
 
+/// Tests for app launch states and screenshots
 final class AmakaFlowCompanionUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
@@ -17,16 +18,36 @@ final class AmakaFlowCompanionUITestsLaunchTests: XCTestCase {
         continueAfterFailure = false
     }
 
+    /// Test launch with test credentials and capture screenshot
     @MainActor
-    func testLaunch() throws {
+    func testLaunchWithTestCredentials() throws {
         let app = XCUIApplication()
+        TestAuthHelper.configureApp(app)
         app.launch()
 
-        // Insert steps here to perform after app launch but before taking a screenshot,
-        // such as logging into a test account or navigating somewhere in the app
+        // Wait for main content to load
+        sleep(2)
 
+        // Capture screenshot of authenticated state
         let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = "Launch Screen"
+        attachment.name = "Launch Screen - Authenticated"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    /// Test launch without credentials (should show pairing view)
+    @MainActor
+    func testLaunchWithoutCredentials() throws {
+        let app = XCUIApplication()
+        // Launch without test configuration to see pairing flow
+        app.launch()
+
+        // Wait for UI to appear
+        sleep(2)
+
+        // Capture screenshot of pairing state
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "Launch Screen - Pairing Required"
         attachment.lifetime = .keepAlways
         add(attachment)
     }
