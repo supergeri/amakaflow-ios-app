@@ -37,6 +37,7 @@ struct VoiceTranscriptionSettingsView: View {
             customTermsSection
         }
         .navigationTitle("Voice Transcription")
+        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showingAddCorrection) {
             addCorrectionSheet
         }
