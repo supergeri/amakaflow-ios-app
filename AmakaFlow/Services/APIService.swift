@@ -271,14 +271,15 @@ class APIService {
     }
 
     /// Sync workout to backend
-    /// - Parameter workout: Workout to sync
+    /// - Parameter workout: Workout to sync/create
     /// - Throws: APIError if sync fails
     func syncWorkout(_ workout: Workout) async throws {
         guard PairingService.shared.isPaired else {
             throw APIError.unauthorized
         }
 
-        let url = URL(string: "\(baseURL)/workouts/sync")!
+        // Use POST /workouts to create the workout
+        let url = URL(string: "\(baseURL)/workouts")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.allHTTPHeaderFields = authHeaders
@@ -287,10 +288,27 @@ class APIService {
         encoder.keyEncodingStrategy = .convertToSnakeCase
         request.httpBody = try encoder.encode(workout)
 
-        let (_, response) = try await session.data(for: request)
+        print("[APIService] syncWorkout - URL: \(url.absoluteString)")
+        print("[APIService] syncWorkout - Workout: \(workout.name)")
+
+        let (data, response) = try await session.data(for: request)
+        let responseString = String(data: data, encoding: .utf8)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
+        }
+
+        print("[APIService] syncWorkout - Status: \(httpResponse.statusCode)")
+        print("[APIService] syncWorkout - Response: \(responseString ?? "nil")")
+
+        // Log errors to DebugLogService
+        if httpResponse.statusCode >= 400 {
+            await DebugLogService.shared.logAPIError(
+                endpoint: "/workouts",
+                method: "POST",
+                statusCode: httpResponse.statusCode,
+                response: responseString
+            )
         }
 
         switch httpResponse.statusCode {
@@ -333,6 +351,167 @@ class APIService {
             throw APIError.unauthorized
         default:
             throw APIError.serverError(httpResponse.statusCode)
+        }
+    }
+
+    // MARK: - Voice Workout Parsing (AMA-5)
+
+    /// Parse a voice transcription into a structured workout
+    /// - Parameters:
+    ///   - transcription: The transcribed text from voice recording
+    ///   - sportHint: Optional hint about the sport type
+    /// - Returns: Parsed workout response with confidence and suggestions
+    /// - Throws: APIError if request fails
+    func parseVoiceWorkout(transcription: String, sportHint: WorkoutSport? = nil) async throws -> VoiceWorkoutParseResponse {
+        guard PairingService.shared.isPaired else {
+            throw APIError.unauthorized
+        }
+
+        // Voice parsing is on the ingestor API, not the mapper API
+        let ingestorURL = AppEnvironment.current.ingestorAPIURL
+        let url = URL(string: "\(ingestorURL)/workouts/parse-voice")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.allHTTPHeaderFields = authHeaders
+
+        var body: [String: Any] = ["transcription": transcription]
+        if let hint = sportHint {
+            body["sport_hint"] = hint.rawValue
+        }
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        print("[APIService] parseVoiceWorkout - URL: \(url.absoluteString)")
+        print("[APIService] parseVoiceWorkout - Body: \(body)")
+
+        let (data, response) = try await session.data(for: request)
+        let responseString = String(data: data, encoding: .utf8)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        print("[APIService] parseVoiceWorkout - Status: \(httpResponse.statusCode)")
+        print("[APIService] parseVoiceWorkout - Response: \(responseString ?? "nil")")
+
+        // Log errors to DebugLogService
+        if httpResponse.statusCode >= 400 {
+            await DebugLogService.shared.logAPIError(
+                endpoint: "/workouts/parse-voice",
+                method: "POST",
+                statusCode: httpResponse.statusCode,
+                response: responseString
+            )
+        }
+
+        switch httpResponse.statusCode {
+        case 200, 201:
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            do {
+                let parseResponse = try decoder.decode(VoiceWorkoutParseResponse.self, from: data)
+                print("[APIService] Parsed workout: \(parseResponse.workout.name)")
+                return parseResponse
+            } catch {
+                print("[APIService] Decoding error: \(error)")
+                throw APIError.decodingError(error)
+            }
+        case 401:
+            throw APIError.unauthorized
+        case 422:
+            // Validation error - could not parse the transcription
+            throw APIError.serverErrorWithBody(422, responseString ?? "Could not understand workout description")
+        default:
+            throw APIError.serverError(httpResponse.statusCode)
+        }
+    }
+
+    // MARK: - Manual Workout Logging (AMA-5)
+
+    /// Log a manually-recorded workout completion to activity history
+    /// Creates both a Workout record (with exercise details) and a Completion record
+    /// - Parameters:
+    ///   - workout: The parsed workout with full interval details
+    ///   - startedAt: When the workout started
+    ///   - endedAt: When the workout ended
+    ///   - durationSeconds: Total duration in seconds
+    /// - Throws: APIError if request fails
+    func logManualWorkout(_ workout: Workout, startedAt: Date, endedAt: Date, durationSeconds: Int) async throws {
+        guard PairingService.shared.isPaired else {
+            throw APIError.unauthorized
+        }
+
+        let url = URL(string: "\(baseURL)/workouts/completions")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.allHTTPHeaderFields = authHeaders
+
+        // Build request body with full workout details
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        // Encode workout intervals to JSON
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        let intervalsData = try encoder.encode(workout.intervals)
+        let intervalsJSON = try JSONSerialization.jsonObject(with: intervalsData)
+
+        let body: [String: Any] = [
+            // Workout details
+            "workout": [
+                "id": workout.id,
+                "name": workout.name,
+                "sport": workout.sport.rawValue,
+                "duration": workout.duration,
+                "intervals": intervalsJSON,
+                "description": workout.description as Any,
+                "source": "ai"
+            ],
+            // Completion details
+            "completion": [
+                "started_at": formatter.string(from: startedAt),
+                "ended_at": formatter.string(from: endedAt),
+                "duration_seconds": durationSeconds,
+                "source": "manual"
+            ]
+        ]
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        print("[APIService] logManualWorkout - URL: \(url.absoluteString)")
+        print("[APIService] logManualWorkout - Workout: \(workout.name) with \(workout.intervals.count) intervals")
+
+        let (data, response) = try await session.data(for: request)
+        let responseString = String(data: data, encoding: .utf8)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        print("[APIService] logManualWorkout - Status: \(httpResponse.statusCode)")
+        print("[APIService] logManualWorkout - Response: \(responseString ?? "nil")")
+
+        // Log errors to DebugLogService
+        if httpResponse.statusCode >= 400 {
+            await DebugLogService.shared.logAPIError(
+                endpoint: "/workouts/completions",
+                method: "POST",
+                statusCode: httpResponse.statusCode,
+                response: responseString
+            )
+        }
+
+        switch httpResponse.statusCode {
+        case 200, 201:
+            return
+        case 401:
+            throw APIError.unauthorized
+        case 404, 405:
+            // Endpoint may not exist yet - log but don't fail for MVP
+            print("[APIService] logManualWorkout - Endpoint not available (\(httpResponse.statusCode))")
+            throw APIError.serverErrorWithBody(httpResponse.statusCode, responseString ?? "Endpoint not available")
+        default:
+            throw APIError.serverErrorWithBody(httpResponse.statusCode, responseString ?? "Unknown error")
         }
     }
 
@@ -432,6 +611,14 @@ struct PendingWorkoutsResponse: Codable {
     let success: Bool
     let workouts: [Workout]
     let count: Int
+}
+
+// MARK: - Voice Workout Parse Response (AMA-5)
+struct VoiceWorkoutParseResponse: Codable {
+    let success: Bool
+    let workout: Workout
+    let confidence: Double
+    let suggestions: [String]
 }
 
 // MARK: - API Errors
