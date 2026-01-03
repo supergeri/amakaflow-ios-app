@@ -20,32 +20,23 @@ struct CompletionDetailView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            content
-                .navigationTitle("Workout Details")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button("Back") {
-                            dismiss()
-                        }
-                    }
+        content
+            .navigationTitle("Workout Details")
+            .navigationBarTitleDisplayMode(.inline)
+            .task {
+                await viewModel.loadDetail()
+            }
+            .refreshable {
+                await viewModel.refresh()
+            }
+            .overlay {
+                if viewModel.showStravaToast {
+                    stravaToast
                 }
-                .task {
-                    await viewModel.loadDetail()
+                if viewModel.showSaveToast {
+                    saveToast
                 }
-                .refreshable {
-                    await viewModel.refresh()
-                }
-                .overlay {
-                    if viewModel.showStravaToast {
-                        stravaToast
-                    }
-                    if viewModel.showSaveToast {
-                        saveToast
-                    }
-                }
-        }
+            }
     }
 
     // MARK: - Content
