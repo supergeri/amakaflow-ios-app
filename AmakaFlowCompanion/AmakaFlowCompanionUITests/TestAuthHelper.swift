@@ -11,8 +11,10 @@ import XCTest
 enum TestAuthHelper {
 
     /// Configure app with test credentials to bypass pairing flow
-    /// - Parameter app: The XCUIApplication instance to configure
-    static func configureApp(_ app: XCUIApplication) {
+    /// - Parameters:
+    ///   - app: The XCUIApplication instance to configure
+    ///   - environment: The environment to use (default: development for localhost)
+    static func configureApp(_ app: XCUIApplication, environment: String = "development") {
         // Launch arguments to trigger test mode in the app
         app.launchArguments = [
             "--uitesting",
@@ -24,7 +26,8 @@ enum TestAuthHelper {
             "TEST_JWT": TestCredentials.pairingToken,
             "TEST_USER_ID": TestCredentials.userId,
             "TEST_USER_EMAIL": TestCredentials.userEmail,
-            "TEST_API_BASE_URL": TestCredentials.apiBaseURL
+            "TEST_API_BASE_URL": TestCredentials.apiBaseURL,
+            "TEST_ENVIRONMENT": environment  // "development", "staging", or "production"
         ]
     }
 

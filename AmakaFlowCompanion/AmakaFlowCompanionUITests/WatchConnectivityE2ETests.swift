@@ -30,7 +30,8 @@ final class WatchConnectivityE2ETests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
 
         app = XCUIApplication()
-        TestAuthHelper.configureApp(app)
+        // Use development environment for Watch tests
+        TestAuthHelper.configureApp(app, environment: "development")
         app.launch()
     }
 

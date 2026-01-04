@@ -46,6 +46,6 @@ enum TestCredentialsExample {
     /// Test user display name
     static let userName = "E2E Test User"
 
-    /// API base URL for testing (use staging)
-    static let apiBaseURL = "https://mapper-api.staging.amakaflow.com"
+    /// API base URL for testing (use development/localhost)
+    static let apiBaseURL = "http://localhost:8001"
 }
