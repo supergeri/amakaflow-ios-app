@@ -22,8 +22,9 @@ enum TestAuthHelper {
         ]
 
         // Environment variables with test credentials
+        // Uses X-Test-Auth header bypass instead of JWT tokens
         app.launchEnvironment = [
-            "TEST_JWT": TestCredentials.pairingToken,
+            "TEST_AUTH_SECRET": TestCredentials.testAuthSecret,
             "TEST_USER_ID": TestCredentials.userId,
             "TEST_USER_EMAIL": TestCredentials.userEmail,
             "TEST_API_BASE_URL": TestCredentials.apiBaseURL,
@@ -66,12 +67,29 @@ enum TestAuthHelper {
         element.waitForExistence(timeout: timeout)
     }
 
-    /// Dismiss any system dialogs that may appear (HealthKit, notifications, etc.)
+    /// Dismiss any system dialogs that may appear (HealthKit, notifications, Local Network, etc.)
     static func dismissSystemDialogs(_ app: XCUIApplication) {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+
+        // Handle Local Network permission ("Connect AmakaFlowCompanion?")
+        let localNetworkAlert = springboard.alerts.containing(
+            NSPredicate(format: "label CONTAINS 'Connect'")
+        ).firstMatch
+        if localNetworkAlert.waitForExistence(timeout: 3) {
+            // Tap "Allow" or "OK" to permit local network access
+            let allowButton = localNetworkAlert.buttons["Allow"]
+            let okButton = localNetworkAlert.buttons["OK"]
+            if allowButton.exists {
+                allowButton.tap()
+            } else if okButton.exists {
+                okButton.tap()
+            }
+            sleep(1)
+        }
+
         // Handle HealthKit authorization
         let healthKitAlert = app.alerts.containing(NSPredicate(format: "label CONTAINS 'Health'")).firstMatch
         if healthKitAlert.waitForExistence(timeout: 2) {
-            // Look for Allow button
             let allowButton = healthKitAlert.buttons["Allow"]
             if allowButton.exists {
                 allowButton.tap()

@@ -67,6 +67,21 @@ class RealWorkoutTestCase: XCTestCase {
         app = XCUIApplication()
         // Use development environment (localhost)
         TestAuthHelper.configureApp(app, environment: "development")
+
+        // Add UI interruption monitor for Local Network permission and other alerts
+        addUIInterruptionMonitor(withDescription: "System Alerts") { alert in
+            let allowButton = alert.buttons["Allow"]
+            let okButton = alert.buttons["OK"]
+            if allowButton.exists {
+                allowButton.tap()
+                return true
+            } else if okButton.exists {
+                okButton.tap()
+                return true
+            }
+            return false
+        }
+
         app.launch()
 
         // Dismiss any system dialogs
@@ -117,21 +132,35 @@ class RealWorkoutTestCase: XCTestCase {
 
     /// Select a workout by name
     func selectWorkout(named name: String) -> Bool {
-        // Search for the workout by name
+        // First try finding static text containing the workout name
+        let workoutText = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS[c] %@", name)
+        ).firstMatch
+
+        if workoutText.waitForExistence(timeout: 5) {
+            workoutText.tap()
+            sleep(1)
+            return true
+        }
+
+        // Try cells containing the name
         let workoutCell = app.cells.containing(
             NSPredicate(format: "label CONTAINS[c] %@", name)
         ).firstMatch
 
-        if workoutCell.waitForExistence(timeout: 5) {
+        if workoutCell.waitForExistence(timeout: 3) {
             workoutCell.tap()
             sleep(1)
             return true
         }
 
-        // Try static texts
-        let workoutText = app.staticTexts[name]
-        if workoutText.waitForExistence(timeout: 3) {
-            workoutText.tap()
+        // Try buttons (some UI frameworks use buttons for list items)
+        let workoutButton = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS[c] %@", name)
+        ).firstMatch
+
+        if workoutButton.waitForExistence(timeout: 3) {
+            workoutButton.tap()
             sleep(1)
             return true
         }

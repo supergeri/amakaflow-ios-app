@@ -23,22 +23,28 @@ class PairingService: ObservableObject {
         let hasUITesting = CommandLine.arguments.contains("--uitesting")
         let hasSkipPairing = CommandLine.arguments.contains("--skip-pairing")
         print("[PairingService] Init - hasUITesting=\(hasUITesting), hasSkipPairing=\(hasSkipPairing)")
-        print("[PairingService] All arguments: \(CommandLine.arguments)")
 
         if hasUITesting && hasSkipPairing {
+            // Check for X-Test-Auth header bypass (preferred - no token expiry)
+            if let testAuthSecret = ProcessInfo.processInfo.environment["TEST_AUTH_SECRET"],
+               let testUserId = ProcessInfo.processInfo.environment["TEST_USER_ID"],
+               !testAuthSecret.isEmpty {
+                print("[E2E] Using X-Test-Auth header bypass for user: \(testUserId)")
+                // Set isPaired directly since auth is via headers, not token
+                isPaired = true
+                userProfile = loadProfile()
+                lastTokenRefresh = loadLastTokenRefresh()
+                print("[PairingService] E2E mode initialized with isPaired=true (X-Test-Auth)")
+                return
+            }
+
+            // Legacy: JWT token in keychain (has expiry issues)
             if let testToken = ProcessInfo.processInfo.environment["TEST_JWT"] {
                 print("[E2E] Found TEST_JWT, length=\(testToken.count)")
-                // Store token first, then check - this ensures isPaired becomes true
                 let saveResult = KeychainHelper.shared.save(testToken, for: tokenKey)
-                print("[E2E] Keychain save result: \(saveResult)")
                 if saveResult {
                     print("[E2E] Test JWT stored in keychain during PairingService init")
-                } else {
-                    print("[E2E] ERROR: Failed to store test JWT in keychain")
                 }
-            } else {
-                print("[E2E] ERROR: TEST_JWT environment variable not found")
-                print("[E2E] Available env vars: \(ProcessInfo.processInfo.environment.keys.joined(separator: ", "))")
             }
         }
         #endif
