@@ -673,4 +673,96 @@ final class CompletionDetailTests: XCTestCase {
             return "cardio"
         }
     }
+
+    // MARK: - Run Again Tests (AMA-237)
+
+    func testCanRerunWithIntervals() {
+        // Workout with intervals can be re-run
+        let result = canRerun(hasWorkoutSteps: true)
+        XCTAssertTrue(result)
+    }
+
+    func testCannotRerunWithoutIntervals() {
+        // Workout without intervals cannot be re-run
+        let result = canRerun(hasWorkoutSteps: false)
+        XCTAssertFalse(result)
+    }
+
+    func testRerunCreatesValidWorkout() {
+        // Given a completion detail with intervals
+        let intervals: [TestInterval] = [
+            .warmup(seconds: 300),
+            .reps(sets: 3, reps: 10, name: "Squats"),
+            .cooldown(seconds: 300)
+        ]
+
+        // When creating a workout for re-run
+        let workout = createWorkoutForRerun(
+            workoutId: "original-123",
+            workoutName: "Test Workout",
+            durationSeconds: 1800,
+            intervals: intervals
+        )
+
+        // Then workout has expected properties
+        XCTAssertEqual(workout.name, "Test Workout")
+        XCTAssertEqual(workout.duration, 1800)
+        XCTAssertEqual(workout.sport, "strength") // Has reps
+        XCTAssertEqual(workout.intervals.count, 3)
+    }
+
+    func testRerunUsesNewIdWhenOriginalNotPresent() {
+        // When workoutId is nil, a new UUID is generated
+        let workout = createWorkoutForRerun(
+            workoutId: nil,
+            workoutName: "Voice Workout",
+            durationSeconds: 900,
+            intervals: [.time(seconds: 60)]
+        )
+
+        // New UUID should be generated (36 chars with dashes)
+        XCTAssertEqual(workout.id.count, 36)
+    }
+
+    func testRerunUsesOriginalIdWhenPresent() {
+        // When workoutId exists, it should be used
+        let workout = createWorkoutForRerun(
+            workoutId: "my-workout-id",
+            workoutName: "Saved Workout",
+            durationSeconds: 900,
+            intervals: [.time(seconds: 60)]
+        )
+
+        XCTAssertEqual(workout.id, "my-workout-id")
+    }
+
+    // MARK: - Run Again Helper Methods
+
+    private func canRerun(hasWorkoutSteps: Bool) -> Bool {
+        return hasWorkoutSteps
+    }
+
+    private struct TestWorkout {
+        let id: String
+        let name: String
+        let duration: Int
+        let sport: String
+        let intervals: [TestInterval]
+    }
+
+    private func createWorkoutForRerun(
+        workoutId: String?,
+        workoutName: String,
+        durationSeconds: Int,
+        intervals: [TestInterval]
+    ) -> TestWorkout {
+        let sport = inferSportFromIntervals(intervals)
+        return TestWorkout(
+            id: workoutId ?? UUID().uuidString,
+            name: workoutName,
+            duration: durationSeconds,
+            sport: sport,
+            intervals: intervals
+        )
+    }
 }

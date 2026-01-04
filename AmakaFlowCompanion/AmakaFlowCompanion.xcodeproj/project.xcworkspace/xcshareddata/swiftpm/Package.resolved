@@ -1,5 +1,5 @@
 {
-  "originHash" : "64775e044d515ad7a7f113c0e8ebfc90afd4e8faac750699d1f565a81878d716",
+  "originHash" : "8728fe79a5e32499ea219e671642fc965fa4eddc0ccf01eac09ec3e1e6a55e04",
   "pins" : [
     {
       "identity" : "sentry-cocoa",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "8627bbc0e663238d516b541d8fc7edd62a627fde",
         "version" : "8.57.3"
+      }
+    },
+    {
+      "identity" : "xcthealthkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/StanfordBDHG/XCTHealthKit.git",
+      "state" : {
+        "revision" : "026d5c6f02cdafa31924548d1ee6ce2fdf182137",
+        "version" : "1.2.4"
       }
     }
   ],

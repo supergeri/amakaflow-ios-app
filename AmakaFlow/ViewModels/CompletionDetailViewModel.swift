@@ -23,6 +23,7 @@ class CompletionDetailViewModel: ObservableObject {
     @Published var isSavingToLibrary: Bool = false
     @Published var showSaveToast: Bool = false
     @Published var saveToastMessage: String = ""
+    @Published var workoutToRerun: Workout?  // Set to navigate to WorkoutPlayerView (AMA-237)
 
     // MARK: - Properties
 
@@ -75,6 +76,12 @@ class CompletionDetailViewModel: ObservableObject {
         return detail.workoutId == nil && detail.hasWorkoutSteps
     }
 
+    /// Whether this workout can be re-run (has intervals/steps) (AMA-237)
+    var canRerun: Bool {
+        guard let detail = detail else { return false }
+        return detail.hasWorkoutSteps
+    }
+
     // MARK: - Initialization
 
     init(completionId: String) {
@@ -124,6 +131,34 @@ class CompletionDetailViewModel: ObservableObject {
     /// Refresh the detail data
     func refresh() async {
         await loadDetail()
+    }
+
+    // MARK: - Run Again (AMA-237)
+
+    /// Create a workout from this completion and trigger navigation to WorkoutPlayerView
+    func rerunWorkout() {
+        guard let detail = detail, let intervals = detail.intervals else {
+            return
+        }
+
+        // Create a Workout from the completion detail
+        let workout = Workout(
+            id: detail.workoutId ?? UUID().uuidString,
+            name: detail.workoutName,
+            sport: inferSportFromIntervals(intervals),
+            duration: detail.durationSeconds,
+            intervals: intervals,
+            description: nil,
+            source: .ai,
+            sourceUrl: nil
+        )
+
+        // Start the workout in the shared engine
+        WorkoutEngine.shared.start(workout: workout)
+
+        // Set this to trigger navigation in the view
+        workoutToRerun = workout
+        print("[CompletionDetailViewModel] Started workout for re-run: \(workout.name)")
     }
 
     // MARK: - Strava Actions

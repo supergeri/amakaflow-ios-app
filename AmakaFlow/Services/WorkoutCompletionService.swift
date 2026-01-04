@@ -22,6 +22,8 @@ struct WorkoutCompletionRequest: Codable {
     let source: String     // "apple_watch", "garmin", "phone"
     let deviceInfo: WorkoutDeviceInfo
     let heartRateSamples: [HRSample]?
+    let intervals: [WorkoutInterval]?   // Workout structure for "Run Again" (AMA-237)
+    let workoutName: String?            // Workout name for display (AMA-237)
 
     enum CodingKeys: String, CodingKey {
         case workoutEventId = "workout_event_id"
@@ -33,6 +35,8 @@ struct WorkoutCompletionRequest: Codable {
         case source
         case deviceInfo = "device_info"
         case heartRateSamples = "heart_rate_samples"
+        case intervals
+        case workoutName = "workout_name"
     }
 }
 
@@ -145,7 +149,8 @@ class WorkoutCompletionService: ObservableObject {
         endedAt: Date,
         durationSeconds: Int,
         avgHeartRate: Int? = nil,
-        activeCalories: Int? = nil
+        activeCalories: Int? = nil,
+        intervals: [WorkoutInterval]? = nil  // (AMA-237) Workout structure for "Run Again"
     ) async throws -> WorkoutCompletionResponse? {
         let healthMetrics = HealthMetrics(
             avgHeartRate: avgHeartRate,
@@ -172,14 +177,20 @@ class WorkoutCompletionService: ObservableObject {
             healthMetrics: healthMetrics,
             source: "phone",
             deviceInfo: deviceInfo,
-            heartRateSamples: nil
+            heartRateSamples: nil,
+            intervals: intervals,
+            workoutName: workoutName
         )
 
         return try await postCompletion(request)
     }
 
     /// Post workout completion from Apple Watch standalone workout
-    func postWatchWorkoutCompletion(summary: StandaloneWorkoutSummary) async throws -> WorkoutCompletionResponse? {
+    func postWatchWorkoutCompletion(
+        summary: StandaloneWorkoutSummary,
+        intervals: [WorkoutInterval]? = nil,  // (AMA-237) Workout structure for "Run Again"
+        workoutName: String? = nil
+    ) async throws -> WorkoutCompletionResponse? {
         let healthMetrics = HealthMetrics(
             avgHeartRate: summary.averageHeartRate.map { Int($0) },
             maxHeartRate: nil,
@@ -205,7 +216,9 @@ class WorkoutCompletionService: ObservableObject {
             healthMetrics: healthMetrics,
             source: "apple_watch",
             deviceInfo: deviceInfo,
-            heartRateSamples: nil
+            heartRateSamples: nil,
+            intervals: intervals,
+            workoutName: workoutName
         )
 
         return try await postCompletion(request)
@@ -217,7 +230,9 @@ class WorkoutCompletionService: ObservableObject {
         startedAt: Date,
         endedAt: Date,
         avgHeartRate: Int? = nil,
-        activeCalories: Int? = nil
+        activeCalories: Int? = nil,
+        intervals: [WorkoutInterval]? = nil,  // (AMA-237) Workout structure for "Run Again"
+        workoutName: String? = nil
     ) async throws -> WorkoutCompletionResponse? {
         let healthMetrics = HealthMetrics(
             avgHeartRate: avgHeartRate,
@@ -244,7 +259,9 @@ class WorkoutCompletionService: ObservableObject {
             healthMetrics: healthMetrics,
             source: "garmin",
             deviceInfo: deviceInfo,
-            heartRateSamples: nil
+            heartRateSamples: nil,
+            intervals: intervals,
+            workoutName: workoutName
         )
 
         return try await postCompletion(request)
