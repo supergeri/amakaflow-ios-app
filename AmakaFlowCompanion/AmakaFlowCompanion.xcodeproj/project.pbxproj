@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0B82E5ED1C34442389BC7768 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 2F0C8DCE03694CF3A60D12F9 /* Sentry */; };
+		XCT4H34LTH00000001 /* XCTHealthKit in Frameworks */ = {isa = PBXBuildFile; productRef = XCT4H34LTH00000002 /* XCTHealthKit */; };
 		1A7B03C2552441FEB810773A /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC49A15AC3F44858DFEE3E6 /* QRScannerView.swift */; };
 		27599809E31D40308DBFA93A /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F86F482904144B39B954F6A /* Environment.swift */; };
 		40E350E9B26F4574902587EF /* PairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29B50DC380A44F2D96E6E414 /* PairingView.swift */; };
@@ -359,6 +360,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F880AD652F09559A00E8D7D3 /* (null) in Frameworks */,
+				XCT4H34LTH00000001 /* XCTHealthKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -599,7 +601,6 @@
 			);
 			name = AmakaFlowCompanionUITests;
 			packageProductDependencies = (
-				XCTH34LTH2320001E2E00002 /* XCTHealthKit */,
 			);
 			productName = AmakaFlowCompanionUITests;
 			productReference = F84E218D2ED0B0CA00459747 /* AmakaFlowCompanionUITests.xctest */;
@@ -746,7 +747,7 @@
 				F84E225F2ED0B84300459747 /* XCLocalSwiftPackageReference "../../../workoutkit-sync" */,
 				F8C125B02EFAC00000459747 /* XCLocalSwiftPackageReference "../Vendor/ConnectIQ" */,
 				6EFD6A06E1264416B1103D42 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
-				XCTH34LTH2320001E2E00001 /* XCRemoteSwiftPackageReference "XCTHealthKit" */,
+				XCT4H34LTH00000003 /* XCRemoteSwiftPackageReference "XCTHealthKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F84E21752ED0B0C800459747 /* Products */;
@@ -1600,7 +1601,7 @@
 				minimumVersion = 8.0.0;
 			};
 		};
-		XCTH34LTH2320001E2E00001 /* XCRemoteSwiftPackageReference "XCTHealthKit" */ = {
+		XCT4H34LTH00000003 /* XCRemoteSwiftPackageReference "XCTHealthKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/StanfordBDHG/XCTHealthKit.git";
 			requirement = {
@@ -1631,9 +1632,9 @@
 			package = F8C125B02EFAC00000459747 /* XCLocalSwiftPackageReference "../Vendor/ConnectIQ" */;
 			productName = ConnectIQ;
 		};
-		XCTH34LTH2320001E2E00002 /* XCTHealthKit */ = {
+		XCT4H34LTH00000002 /* XCTHealthKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = XCTH34LTH2320001E2E00001 /* XCRemoteSwiftPackageReference "XCTHealthKit" */;
+			package = XCT4H34LTH00000003 /* XCRemoteSwiftPackageReference "XCTHealthKit" */;
 			productName = XCTHealthKit;
 		};
 /* End XCSwiftPackageProductDependency section */
