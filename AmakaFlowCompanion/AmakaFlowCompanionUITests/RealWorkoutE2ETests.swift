@@ -333,8 +333,9 @@ class RealWorkoutTestCase: XCTestCase {
             }
         }
 
-        // Now look for "End Workout" button in the confirmation dialog (action sheet/popover)
-        // There may be multiple "End Workout" buttons, so find the one in the sheet specifically
+        // Now look for "Save & End" button in the confirmation dialog (action sheet/popover)
+        // The dialog has options: "Save & End", "Resume Later", "Discard", "Cancel"
+        // We want "Save & End" to save the workout progress
 
         // First try to find the sheet containing the confirmation
         let confirmationSheet = app.sheets.matching(
@@ -342,6 +343,15 @@ class RealWorkoutTestCase: XCTestCase {
         ).firstMatch
 
         if confirmationSheet.waitForExistence(timeout: 5) {
+            // Try "Save & End" first (saves workout progress)
+            let saveEndButton = confirmationSheet.buttons["Save & End"]
+            if saveEndButton.exists {
+                print("[E2E] Found 'Save & End' in confirmation sheet")
+                saveEndButton.tap()
+                sleep(2)
+                return true
+            }
+            // Fallback to "End Workout" for older UI
             let endButton = confirmationSheet.buttons["End Workout"]
             if endButton.exists {
                 print("[E2E] Found 'End Workout' in confirmation sheet")
@@ -354,6 +364,13 @@ class RealWorkoutTestCase: XCTestCase {
         // Fallback: try sheets without label matching
         let actionSheet = app.sheets.firstMatch
         if actionSheet.waitForExistence(timeout: 2) {
+            let saveEndButton = actionSheet.buttons["Save & End"]
+            if saveEndButton.exists {
+                print("[E2E] Found 'Save & End' in action sheet")
+                saveEndButton.tap()
+                sleep(2)
+                return true
+            }
             let endButton = actionSheet.buttons["End Workout"]
             if endButton.exists {
                 print("[E2E] Found 'End Workout' in action sheet")
@@ -366,6 +383,13 @@ class RealWorkoutTestCase: XCTestCase {
         // Fallback: try popovers (iOS sometimes uses these for confirmation dialogs)
         let popover = app.popovers.firstMatch
         if popover.waitForExistence(timeout: 2) {
+            let saveEndButton = popover.buttons["Save & End"]
+            if saveEndButton.exists {
+                print("[E2E] Found 'Save & End' in popover")
+                saveEndButton.tap()
+                sleep(2)
+                return true
+            }
             let endButton = popover.buttons["End Workout"]
             if endButton.exists {
                 print("[E2E] Found 'End Workout' in popover")
@@ -375,11 +399,20 @@ class RealWorkoutTestCase: XCTestCase {
             }
         }
 
-        // Last resort: tap the first "End Workout" button that has destructive styling
-        // This is a coordinate-based approach if all else fails
+        // Last resort: tap any "Save & End" or "End Workout" button
+        let saveEndButtons = app.buttons.matching(NSPredicate(format: "label == 'Save & End'"))
+        if saveEndButtons.count > 0 {
+            let lastButton = saveEndButtons.element(boundBy: saveEndButtons.count - 1)
+            if lastButton.exists {
+                print("[E2E] Found 'Save & End' button (using last match)")
+                lastButton.tap()
+                sleep(2)
+                return true
+            }
+        }
+
         let endWorkoutButtons = app.buttons.matching(NSPredicate(format: "label == 'End Workout'"))
         if endWorkoutButtons.count > 0 {
-            // Tap the last one (usually the one in the dialog is rendered on top)
             let lastButton = endWorkoutButtons.element(boundBy: endWorkoutButtons.count - 1)
             if lastButton.exists {
                 print("[E2E] Found 'End Workout' button (using last match)")
@@ -389,12 +422,17 @@ class RealWorkoutTestCase: XCTestCase {
             }
         }
 
-        // Try finding button that exactly says "End Workout"
+        // Try finding button that exactly says "Save & End" or "End Workout"
         for i in 0..<min(15, app.buttons.count) {
             let btn = app.buttons.element(boundBy: i)
             if btn.exists {
                 let label = btn.label.lowercased()
-                // Must be "end workout" specifically, not just containing "end"
+                if label == "save & end" {
+                    print("[E2E] Found 'Save & End' button at index \(i)")
+                    btn.tap()
+                    sleep(2)
+                    return true
+                }
                 if label == "end workout" || label.hasPrefix("end workout") {
                     print("[E2E] Found 'End Workout' button at index \(i)")
                     btn.tap()
@@ -405,7 +443,7 @@ class RealWorkoutTestCase: XCTestCase {
         }
 
         // Debug: print available buttons to understand what's visible
-        print("[E2E] Could not find End Workout button. Visible buttons:")
+        print("[E2E] Could not find Save & End or End Workout button. Visible buttons:")
         for i in 0..<min(15, app.buttons.count) {
             let btn = app.buttons.element(boundBy: i)
             if btn.exists {
