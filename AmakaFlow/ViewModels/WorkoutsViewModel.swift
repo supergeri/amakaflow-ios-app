@@ -8,6 +8,12 @@
 import Foundation
 import Combine
 
+// MARK: - Notification Names (AMA-237)
+
+extension Notification.Name {
+    static let workoutCompleted = Notification.Name("workoutCompleted")
+}
+
 @MainActor
 class WorkoutsViewModel: ObservableObject {
     @Published var upcomingWorkouts: [ScheduledWorkout] = []
@@ -20,9 +26,20 @@ class WorkoutsViewModel: ObservableObject {
 
     private let calendarManager = CalendarManager()
     private let apiService = APIService.shared
+    private var cancellables = Set<AnyCancellable>()
 
     init() {
         // Start with empty data - will load from API or demo mode
+
+        // Observe workout completion notifications (AMA-237)
+        NotificationCenter.default.publisher(for: .workoutCompleted)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] notification in
+                if let workoutId = notification.userInfo?["workoutId"] as? String {
+                    self?.markWorkoutCompleted(workoutId)
+                }
+            }
+            .store(in: &cancellables)
     }
 
     // MARK: - Data Loading
@@ -221,6 +238,18 @@ class WorkoutsViewModel: ObservableObject {
 
     func deleteWorkout(_ workout: ScheduledWorkout) {
         upcomingWorkouts.removeAll { $0.id == workout.id }
+    }
+
+    /// Mark a workout as completed - removes from incoming and upcoming lists (AMA-237)
+    /// Called after WorkoutCompletionService.submitCompletion() succeeds
+    func markWorkoutCompleted(_ workoutId: String) {
+        // Remove from incoming (if present)
+        incomingWorkouts.removeAll { $0.id == workoutId }
+
+        // Remove from upcoming (scheduled workouts)
+        upcomingWorkouts.removeAll { $0.workout.id == workoutId }
+
+        print("[WorkoutsViewModel] Marked workout \(workoutId) as completed, removed from lists")
     }
     
     func addSampleWorkout() {

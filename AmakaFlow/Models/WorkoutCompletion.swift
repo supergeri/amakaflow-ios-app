@@ -20,6 +20,8 @@ struct WorkoutCompletion: Identifiable, Codable, Hashable {
     let activeCalories: Int?
     let source: CompletionSource
     let syncedToStrava: Bool?    // Optional - backend may not return this
+    let workoutId: String?       // Link to original workout (AMA-237)
+    let originalWorkout: Workout? // Full workout for re-running (AMA-237)
 
     /// Computed endedAt from startedAt + durationSeconds if not provided
     var resolvedEndedAt: Date {
@@ -29,6 +31,11 @@ struct WorkoutCompletion: Identifiable, Codable, Hashable {
     /// Strava sync status with default false if not provided
     var isSyncedToStrava: Bool {
         syncedToStrava ?? false
+    }
+
+    /// Whether this completion can be re-run (has original workout data)
+    var canRerun: Bool {
+        originalWorkout != nil
     }
 
     enum CompletionSource: String, Codable {
@@ -186,7 +193,9 @@ extension WorkoutCompletion {
                 maxHeartRate: 178,
                 activeCalories: 320,
                 source: .appleWatch,
-                syncedToStrava: true
+                syncedToStrava: true,
+                workoutId: "workout-1",
+                originalWorkout: nil
             ),
             WorkoutCompletion(
                 id: "2",
@@ -198,7 +207,9 @@ extension WorkoutCompletion {
                 maxHeartRate: 145,
                 activeCalories: 245,
                 source: .appleWatch,
-                syncedToStrava: false
+                syncedToStrava: false,
+                workoutId: "workout-2",
+                originalWorkout: nil
             ),
             WorkoutCompletion(
                 id: "3",
@@ -210,7 +221,9 @@ extension WorkoutCompletion {
                 maxHeartRate: 110,
                 activeCalories: 120,
                 source: .appleWatch,
-                syncedToStrava: false
+                syncedToStrava: false,
+                workoutId: nil,
+                originalWorkout: nil
             ),
             WorkoutCompletion(
                 id: "4",
@@ -222,7 +235,9 @@ extension WorkoutCompletion {
                 maxHeartRate: 172,
                 activeCalories: 280,
                 source: .garmin,
-                syncedToStrava: true
+                syncedToStrava: true,
+                workoutId: "workout-4",
+                originalWorkout: nil
             ),
             WorkoutCompletion(
                 id: "5",
@@ -234,7 +249,9 @@ extension WorkoutCompletion {
                 maxHeartRate: 130,
                 activeCalories: 150,
                 source: .phone,
-                syncedToStrava: false
+                syncedToStrava: false,
+                workoutId: nil,
+                originalWorkout: nil
             )
         ]
     }

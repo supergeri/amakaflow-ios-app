@@ -108,8 +108,8 @@ class APIService {
             throw APIError.unauthorized
         }
 
-        let url = URL(string: "\(baseURL)/workouts")!
-        print("[APIService] Fetching workouts from: \(url)")
+        let url = URL(string: "\(baseURL)/workouts/incoming")!
+        print("[APIService] Fetching incoming workouts from: \(url)")
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"

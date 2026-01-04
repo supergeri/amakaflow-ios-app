@@ -267,4 +267,126 @@ final class WorkoutsViewModelTests: XCTestCase {
             XCTAssertFalse(workout.name.isEmpty)
         }
     }
+
+    // MARK: - Mark Workout Completed Tests (AMA-237)
+
+    func testMarkWorkoutCompletedRemovesFromIncoming() {
+        // Given workouts in incoming list
+        guard let workoutToComplete = viewModel.incomingWorkouts.first else {
+            XCTFail("No workouts in incoming list")
+            return
+        }
+        let workoutId = workoutToComplete.id
+        let initialCount = viewModel.incomingWorkouts.count
+
+        // When marking as completed
+        viewModel.markWorkoutCompleted(workoutId)
+
+        // Then workout is removed from incoming
+        XCTAssertEqual(viewModel.incomingWorkouts.count, initialCount - 1)
+        XCTAssertFalse(viewModel.incomingWorkouts.contains(where: { $0.id == workoutId }))
+    }
+
+    func testMarkWorkoutCompletedRemovesFromUpcoming() {
+        // Given workouts in upcoming list
+        guard let scheduledToComplete = viewModel.upcomingWorkouts.first else {
+            XCTFail("No workouts in upcoming list")
+            return
+        }
+        let workoutId = scheduledToComplete.workout.id
+        let initialCount = viewModel.upcomingWorkouts.count
+
+        // When marking as completed
+        viewModel.markWorkoutCompleted(workoutId)
+
+        // Then workout is removed from upcoming
+        XCTAssertEqual(viewModel.upcomingWorkouts.count, initialCount - 1)
+        XCTAssertFalse(viewModel.upcomingWorkouts.contains(where: { $0.workout.id == workoutId }))
+    }
+
+    func testMarkWorkoutCompletedWithNonExistentId() {
+        // Given
+        let initialIncomingCount = viewModel.incomingWorkouts.count
+        let initialUpcomingCount = viewModel.upcomingWorkouts.count
+
+        // When marking non-existent workout as completed
+        viewModel.markWorkoutCompleted("non-existent-id-12345")
+
+        // Then counts remain unchanged
+        XCTAssertEqual(viewModel.incomingWorkouts.count, initialIncomingCount)
+        XCTAssertEqual(viewModel.upcomingWorkouts.count, initialUpcomingCount)
+    }
+
+    func testMarkWorkoutCompletedRemovesFromBothLists() {
+        // Create a workout that exists in both incoming and upcoming (same ID)
+        let sharedWorkout = Workout(
+            id: "shared-workout-id",
+            name: "Shared Workout",
+            sport: .strength,
+            duration: 1800,
+            intervals: [],
+            source: .ai
+        )
+
+        // Add to incoming
+        viewModel.incomingWorkouts.append(sharedWorkout)
+
+        // Add to upcoming
+        let scheduled = ScheduledWorkout(
+            workout: sharedWorkout,
+            scheduledDate: Date(),
+            scheduledTime: nil,
+            syncedToApple: false
+        )
+        viewModel.upcomingWorkouts.append(scheduled)
+
+        // When marking as completed
+        viewModel.markWorkoutCompleted("shared-workout-id")
+
+        // Then workout is removed from both lists
+        XCTAssertFalse(viewModel.incomingWorkouts.contains(where: { $0.id == "shared-workout-id" }))
+        XCTAssertFalse(viewModel.upcomingWorkouts.contains(where: { $0.workout.id == "shared-workout-id" }))
+    }
+
+    // MARK: - Notification Observer Tests (AMA-237)
+
+    func testWorkoutCompletedNotificationTriggersRemoval() async {
+        // Given a workout in the list
+        guard let workout = viewModel.incomingWorkouts.first else {
+            XCTFail("No workouts in incoming list")
+            return
+        }
+        let workoutId = workout.id
+
+        // When posting notification
+        NotificationCenter.default.post(
+            name: .workoutCompleted,
+            object: nil,
+            userInfo: ["workoutId": workoutId]
+        )
+
+        // Wait for notification to be processed on main queue
+        await Task.yield()
+
+        // Then workout should be removed
+        XCTAssertFalse(viewModel.incomingWorkouts.contains(where: { $0.id == workoutId }))
+    }
+
+    func testWorkoutCompletedNotificationWithMissingUserInfo() async {
+        // Given
+        let initialCount = viewModel.incomingWorkouts.count
+
+        // When posting notification without userInfo
+        NotificationCenter.default.post(
+            name: .workoutCompleted,
+            object: nil,
+            userInfo: nil
+        )
+
+        // Wait for notification to be processed
+        await Task.yield()
+
+        // Then counts remain unchanged (no crash)
+        XCTAssertEqual(viewModel.incomingWorkouts.count, initialCount)
+    }
 }

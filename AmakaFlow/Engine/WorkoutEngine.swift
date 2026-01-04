@@ -406,7 +406,8 @@ class WorkoutEngine: ObservableObject {
             id: workout?.id,
             name: workout?.name,
             startTime: workoutStartTime,
-            duration: elapsedSeconds
+            duration: elapsedSeconds,
+            intervals: workout?.intervals  // (AMA-237) For "Run Again" feature
         )
 
         timer?.invalidate()
@@ -425,7 +426,8 @@ class WorkoutEngine: ObservableObject {
                 workoutId: workoutData.id,
                 workoutName: workoutData.name,
                 startedAt: workoutData.startTime,
-                durationSeconds: workoutData.duration
+                durationSeconds: workoutData.duration,
+                intervals: workoutData.intervals  // (AMA-237) For "Run Again" feature
             )
         } else if reason == .discarded {
             print("🏋️ Workout discarded - not posting to API")
@@ -477,7 +479,8 @@ class WorkoutEngine: ObservableObject {
         workoutId: String?,
         workoutName: String?,
         startedAt: Date?,
-        durationSeconds: Int
+        durationSeconds: Int,
+        intervals: [WorkoutInterval]?  // (AMA-237) For "Run Again" feature
     ) {
         logger.info("postWorkoutCompletion called")
         logger.info("- workoutId: \(workoutId ?? "nil")")
@@ -485,6 +488,7 @@ class WorkoutEngine: ObservableObject {
         logger.info("- startedAt: \(startedAt?.description ?? "nil")")
         logger.info("- durationSeconds: \(durationSeconds)")
         logger.info("- isPaired: \(PairingService.shared.isPaired)")
+        logger.info("- intervals count: \(intervals?.count ?? 0)")
 
         guard let workoutId = workoutId,
               let startedAt = startedAt else {
@@ -507,9 +511,17 @@ class WorkoutEngine: ObservableObject {
                     endedAt: endedAt,
                     durationSeconds: durationSeconds,
                     avgHeartRate: avgHeartRate,
-                    activeCalories: activeCalories
+                    activeCalories: activeCalories,
+                    intervals: intervals  // (AMA-237) Include workout structure for "Run Again"
                 )
                 logger.info("Workout completion posted successfully")
+
+                // Notify WorkoutsViewModel to remove from incoming/upcoming lists (AMA-237)
+                NotificationCenter.default.post(
+                    name: .workoutCompleted,
+                    object: nil,
+                    userInfo: ["workoutId": workoutId]
+                )
             } catch {
                 logger.error("Failed to post workout completion: \(error.localizedDescription)")
                 // Error is already logged and queued for retry by WorkoutCompletionService

@@ -149,4 +149,126 @@ final class WorkoutCompletionViewModelTests: XCTestCase {
             )
         }
     }
+
+    // MARK: - WorkoutCompletionRequest Encoding Tests (AMA-237)
+
+    func testWorkoutCompletionRequestEncodesIntervals() throws {
+        // Given a completion request with intervals
+        let intervals: [WorkoutInterval] = [
+            .warmup(seconds: 300, target: "Easy pace"),
+            .reps(sets: 3, reps: 10, name: "Squats", load: "50kg", restSec: 60, followAlongUrl: nil),
+            .cooldown(seconds: 180, target: nil)
+        ]
+
+        let request = WorkoutCompletionRequest(
+            workoutEventId: nil,
+            workoutId: "workout-123",
+            followAlongWorkoutId: nil,
+            startedAt: "2025-01-04T10:00:00.000Z",
+            endedAt: "2025-01-04T10:45:00.000Z",
+            healthMetrics: HealthMetrics(
+                avgHeartRate: 140,
+                maxHeartRate: 165,
+                minHeartRate: 85,
+                activeCalories: 300,
+                totalCalories: nil,
+                distanceMeters: nil,
+                steps: nil
+            ),
+            source: "phone",
+            deviceInfo: WorkoutDeviceInfo(platform: "ios", model: "iPhone15,2", osVersion: "18.0"),
+            heartRateSamples: nil,
+            intervals: intervals,
+            workoutName: "Test Workout"
+        )
+
+        // When encoding
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        let data = try encoder.encode(request)
+        let json = String(data: data, encoding: .utf8)!
+
+        // Then intervals should be included
+        XCTAssertTrue(json.contains("\"intervals\""))
+        XCTAssertTrue(json.contains("\"workout_name\":\"Test Workout\""))
+        XCTAssertTrue(json.contains("Squats"))
+    }
+
+    func testWorkoutCompletionRequestEncodesWithNilIntervals() throws {
+        // Given a completion request without intervals
+        let request = WorkoutCompletionRequest(
+            workoutEventId: nil,
+            workoutId: "workout-456",
+            followAlongWorkoutId: nil,
+            startedAt: "2025-01-04T10:00:00.000Z",
+            endedAt: "2025-01-04T10:30:00.000Z",
+            healthMetrics: HealthMetrics(
+                avgHeartRate: 130,
+                maxHeartRate: nil,
+                minHeartRate: nil,
+                activeCalories: 200,
+                totalCalories: nil,
+                distanceMeters: nil,
+                steps: nil
+            ),
+            source: "apple_watch",
+            deviceInfo: WorkoutDeviceInfo(platform: "watchos", model: "Apple Watch", osVersion: nil),
+            heartRateSamples: nil,
+            intervals: nil,
+            workoutName: nil
+        )
+
+        // When encoding
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(request)
+        let json = String(data: data, encoding: .utf8)!
+
+        // Then should encode without errors (intervals should be null)
+        XCTAssertTrue(json.contains("\"workout_id\":\"workout-456\""))
+        XCTAssertTrue(json.contains("\"source\":\"apple_watch\""))
+    }
+
+    func testWorkoutCompletionRequestHasCorrectCodingKeys() throws {
+        // Given a simple request
+        let request = WorkoutCompletionRequest(
+            workoutEventId: "event-1",
+            workoutId: "workout-1",
+            followAlongWorkoutId: nil,
+            startedAt: "2025-01-04T10:00:00.000Z",
+            endedAt: "2025-01-04T10:30:00.000Z",
+            healthMetrics: HealthMetrics(
+                avgHeartRate: nil,
+                maxHeartRate: nil,
+                minHeartRate: nil,
+                activeCalories: nil,
+                totalCalories: nil,
+                distanceMeters: nil,
+                steps: nil
+            ),
+            source: "phone",
+            deviceInfo: WorkoutDeviceInfo(platform: "ios", model: nil, osVersion: nil),
+            heartRateSamples: nil,
+            intervals: [],
+            workoutName: "My Workout"
+        )
+
+        // When encoding
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(request)
+        let json = String(data: data, encoding: .utf8)!
+
+        // Then should use snake_case keys
+        XCTAssertTrue(json.contains("\"workout_event_id\""))
+        XCTAssertTrue(json.contains("\"workout_id\""))
+        XCTAssertTrue(json.contains("\"started_at\""))
+        XCTAssertTrue(json.contains("\"ended_at\""))
+        XCTAssertTrue(json.contains("\"health_metrics\""))
+        XCTAssertTrue(json.contains("\"device_info\""))
+        XCTAssertTrue(json.contains("\"workout_name\""))
+
+        // And should NOT contain camelCase keys
+        XCTAssertFalse(json.contains("\"workoutEventId\""))
+        XCTAssertFalse(json.contains("\"workoutId\""))
+        XCTAssertFalse(json.contains("\"startedAt\""))
+    }
 }

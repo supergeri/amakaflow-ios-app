@@ -115,6 +115,11 @@ struct CompletionDetailView: View {
                     saveToLibraryButton
                 }
 
+                // Run Again Button (AMA-237)
+                if viewModel.canRerun {
+                    runAgainButton
+                }
+
                 // Strava Button
                 stravaButton
 
@@ -248,6 +253,31 @@ struct CompletionDetailView: View {
                 .foregroundColor(valueColor)
         }
         .font(.subheadline)
+    }
+
+    // MARK: - Run Again Button (AMA-237)
+
+    private var runAgainButton: some View {
+        Button {
+            viewModel.rerunWorkout()
+        } label: {
+            HStack {
+                Image(systemName: "arrow.counterclockwise")
+                Text("Run Again")
+            }
+            .font(.headline)
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Theme.Colors.accentGreen)
+            .cornerRadius(12)
+        }
+        .fullScreenCover(item: $viewModel.workoutToRerun) { workout in
+            WorkoutPlayerView()
+                .onAppear {
+                    // Workout is already started by rerunWorkout()
+                }
+        }
     }
 
     // MARK: - Save to Library Button
