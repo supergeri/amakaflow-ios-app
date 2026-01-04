@@ -133,6 +133,7 @@ struct WorkoutPlayerView: View {
                     .background(Theme.Colors.surfaceElevated)
                     .clipShape(Circle())
             }
+            .accessibilityIdentifier("CloseWorkoutButton")
 
             Spacer()
 
