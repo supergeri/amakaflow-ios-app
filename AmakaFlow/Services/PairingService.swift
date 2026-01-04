@@ -17,9 +17,39 @@ class PairingService: ObservableObject {
     @Published var lastTokenRefresh: Date?
 
     private init() {
+        // Handle E2E test auth bypass (AMA-232)
+        // Check for test mode BEFORE setting isPaired so SwiftUI sees the correct initial state
+        #if DEBUG
+        let hasUITesting = CommandLine.arguments.contains("--uitesting")
+        let hasSkipPairing = CommandLine.arguments.contains("--skip-pairing")
+        print("[PairingService] Init - hasUITesting=\(hasUITesting), hasSkipPairing=\(hasSkipPairing)")
+        print("[PairingService] All arguments: \(CommandLine.arguments)")
+
+        if hasUITesting && hasSkipPairing {
+            if let testToken = ProcessInfo.processInfo.environment["TEST_JWT"] {
+                print("[E2E] Found TEST_JWT, length=\(testToken.count)")
+                // Store token first, then check - this ensures isPaired becomes true
+                let saveResult = KeychainHelper.shared.save(testToken, for: tokenKey)
+                print("[E2E] Keychain save result: \(saveResult)")
+                if saveResult {
+                    print("[E2E] Test JWT stored in keychain during PairingService init")
+                } else {
+                    print("[E2E] ERROR: Failed to store test JWT in keychain")
+                }
+            } else {
+                print("[E2E] ERROR: TEST_JWT environment variable not found")
+                print("[E2E] Available env vars: \(ProcessInfo.processInfo.environment.keys.joined(separator: ", "))")
+            }
+        }
+        #endif
+
         isPaired = getToken() != nil
         userProfile = loadProfile()
         lastTokenRefresh = loadLastTokenRefresh()
+
+        #if DEBUG
+        print("[PairingService] Initialized with isPaired=\(isPaired), hasToken=\(getToken() != nil)")
+        #endif
     }
 
     /// Mark authentication as invalid (e.g., on 401 response)

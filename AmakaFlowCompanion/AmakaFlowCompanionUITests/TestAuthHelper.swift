@@ -36,19 +36,21 @@ enum TestAuthHelper {
     @discardableResult
     static func waitForMainContent(_ app: XCUIApplication, timeout: TimeInterval = 10) -> Bool {
         // Look for elements that indicate we're past the pairing screen
-        // The app should show tabs or workout list when paired
+        // The app shows a tab bar with Home, Workouts, etc. when paired
         let tabBar = app.tabBars.firstMatch
-        let workoutList = app.navigationBars["Workouts"]
 
-        let predicate = NSPredicate(format: "exists == true")
-        let expectations = [
-            XCTNSPredicateExpectation(predicate: predicate, object: tabBar),
-            XCTNSPredicateExpectation(predicate: predicate, object: workoutList)
-        ]
+        // Wait for tab bar to appear - this is the primary indicator
+        if tabBar.waitForExistence(timeout: timeout) {
+            return true
+        }
 
-        // Wait for any of these to appear
-        let result = XCTWaiter.wait(for: expectations, timeout: timeout, enforceOrder: false)
-        return result == .completed
+        // Fallback: look for Home tab content elements
+        let homeContent = app.staticTexts["Today's Workouts"]
+        if homeContent.waitForExistence(timeout: 2) {
+            return true
+        }
+
+        return false
     }
 
     /// Wait for a specific element to appear

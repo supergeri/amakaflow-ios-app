@@ -29,7 +29,10 @@ import Foundation
 
 /// Test credentials for E2E UI testing
 /// These credentials bypass the normal pairing flow
-enum TestCredentials {
+///
+/// IMPORTANT: Copy this file to TestCredentials.swift and fill in your values
+/// This example file uses a different enum name to avoid conflicts
+enum TestCredentialsExample {
     /// Long-lived JWT for test account
     /// Replace with your generated JWT
     static let pairingToken = "YOUR_JWT_TOKEN_HERE"
