@@ -24,18 +24,17 @@ class PairingService: ObservableObject {
         let hasSkipPairing = CommandLine.arguments.contains("--skip-pairing")
         print("[PairingService] Init - hasUITesting=\(hasUITesting), hasSkipPairing=\(hasSkipPairing)")
 
-        // Check for X-Test-Auth header bypass (preferred - no token expiry)
-        // Support both: command line args OR environment variables alone
-        let testAuthSecret = ProcessInfo.processInfo.environment["TEST_AUTH_SECRET"]
-        let testUserId = ProcessInfo.processInfo.environment["TEST_USER_ID"]
-        let testUserEmail = ProcessInfo.processInfo.environment["TEST_USER_EMAIL"]
-
-        if let authSecret = testAuthSecret, let userId = testUserId, !authSecret.isEmpty {
+        // Check for X-Test-Auth header bypass via TestAuthStore
+        // This handles both environment variables AND stored credentials from UI
+        if let authSecret = TestAuthStore.shared.authSecret,
+           let userId = TestAuthStore.shared.userId,
+           !authSecret.isEmpty {
             print("[E2E] Using X-Test-Auth header bypass for user: \(userId)")
             // Set isPaired directly since auth is via headers, not token
             isPaired = true
 
-            // Create a test profile from environment variables (AMA-240)
+            // Create a test profile
+            let testUserEmail = TestAuthStore.shared.userEmail
             userProfile = UserProfile(
                 id: userId,
                 email: testUserEmail,
@@ -81,6 +80,55 @@ class PairingService: ObservableObject {
     /// Called after successful re-pairing to clear the needsReauth flag
     func authRestored() {
         needsReauth = false
+    }
+
+    // MARK: - E2E Test Mode
+
+    /// Enable E2E test mode with provided credentials (for manual testing on simulators)
+    /// - Parameters:
+    ///   - authSecret: The test auth secret
+    ///   - userId: The test user ID
+    func enableTestMode(authSecret: String, userId: String) {
+        #if DEBUG
+        guard AppEnvironment.current != .production else {
+            print("[PairingService] Cannot enable test mode in production")
+            return
+        }
+
+        // Store credentials
+        TestAuthStore.shared.storeCredentials(authSecret: authSecret, userId: userId)
+
+        // Set paired state
+        isPaired = true
+        userProfile = UserProfile(
+            id: userId,
+            email: nil,
+            name: "E2E Test User",
+            avatarUrl: nil
+        )
+        needsReauth = false
+
+        print("[PairingService] E2E test mode enabled for user: \(userId)")
+        #endif
+    }
+
+    /// Disable E2E test mode and clear stored credentials
+    func disableTestMode() {
+        #if DEBUG
+        TestAuthStore.shared.clearCredentials()
+        isPaired = false
+        userProfile = nil
+        print("[PairingService] E2E test mode disabled")
+        #endif
+    }
+
+    /// Check if currently in E2E test mode
+    var isInTestMode: Bool {
+        #if DEBUG
+        return TestAuthStore.shared.isTestModeEnabled
+        #else
+        return false
+        #endif
     }
 
     // MARK: - Token Refresh

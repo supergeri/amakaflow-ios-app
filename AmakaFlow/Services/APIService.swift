@@ -79,9 +79,10 @@ class APIService {
         var headers = ["Content-Type": "application/json"]
 
         // E2E Test mode: Use X-Test-Auth header bypass instead of JWT
+        // This checks both environment variables AND stored credentials from UI
         #if DEBUG
-        if let testAuthSecret = ProcessInfo.processInfo.environment["TEST_AUTH_SECRET"],
-           let testUserId = ProcessInfo.processInfo.environment["TEST_USER_ID"],
+        if let testAuthSecret = TestAuthStore.shared.authSecret,
+           let testUserId = TestAuthStore.shared.userId,
            !testAuthSecret.isEmpty {
             headers["X-Test-Auth"] = testAuthSecret
             headers["X-Test-User-Id"] = testUserId

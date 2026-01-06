@@ -532,8 +532,8 @@ class WorkoutEngine: ObservableObject {
     /// Get health metrics - uses mock data in E2E test mode, otherwise from Watch
     private func getHealthMetrics(durationSeconds: Int) -> (avgHeartRate: Int?, activeCalories: Int?) {
         #if DEBUG
-        // Check if running in E2E test mode (TEST_AUTH_SECRET environment variable set)
-        if ProcessInfo.processInfo.environment["TEST_AUTH_SECRET"] != nil {
+        // Check if running in E2E test mode (via TestAuthStore - supports both env vars and UI bypass)
+        if TestAuthStore.shared.isTestModeEnabled {
             // Generate realistic mock health data for E2E tests
             // Average HR varies by workout intensity - use 130-150 bpm range for strength training
             let baseHR = 140

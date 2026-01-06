@@ -7,6 +7,13 @@ struct PairingView: View {
     @State private var errorMessage: String?
     @State private var showScanner = false
 
+    // E2E Testing bypass (DEBUG only, non-production)
+    #if DEBUG
+    @State private var showE2EDialog = false
+    @State private var e2eAuthSecret = ""
+    @State private var e2eUserId = ""
+    #endif
+
     var body: some View {
         NavigationView {
             VStack(spacing: 32) {
@@ -119,7 +126,21 @@ struct PairingView: View {
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
                 }
-                .padding(.bottom, 32)
+                .padding(.bottom, 16)
+
+                // E2E Testing bypass button (DEBUG only, non-production)
+                #if DEBUG
+                if AppEnvironment.current != .production {
+                    Button {
+                        showE2EDialog = true
+                    } label: {
+                        Text("Skip for E2E Testing")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
+                    .padding(.bottom, 16)
+                }
+                #endif
             }
             .navigationBarHidden(true)
             .sheet(isPresented: $showScanner) {
@@ -128,6 +149,24 @@ struct PairingView: View {
                     Task { await pair(with: code) }
                 }
             }
+            #if DEBUG
+            .sheet(isPresented: $showE2EDialog) {
+                E2ETestingDialog(
+                    authSecret: $e2eAuthSecret,
+                    userId: $e2eUserId,
+                    onCancel: {
+                        showE2EDialog = false
+                        e2eAuthSecret = ""
+                        e2eUserId = ""
+                    },
+                    onEnable: {
+                        pairingService.enableTestMode(authSecret: e2eAuthSecret, userId: e2eUserId)
+                        showE2EDialog = false
+                    }
+                )
+                .presentationDetents([.medium])
+            }
+            #endif
         }
     }
 
@@ -179,6 +218,73 @@ struct QRCodeData: Codable {
         case apiUrl = "api_url"
     }
 }
+
+// MARK: - E2E Testing Dialog (DEBUG only)
+#if DEBUG
+struct E2ETestingDialog: View {
+    @Binding var authSecret: String
+    @Binding var userId: String
+    let onCancel: () -> Void
+    let onEnable: () -> Void
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 24) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Enable E2E Test Mode")
+                        .font(.title2)
+                        .fontWeight(.bold)
+
+                    Text("Enter test credentials to bypass authentication for E2E testing.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                VStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Auth Secret")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        TextField("Auth Secret", text: $authSecret)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("User ID")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        TextField("User ID", text: $userId)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                    }
+                }
+
+                Spacer()
+
+                HStack(spacing: 16) {
+                    Button("Cancel") {
+                        onCancel()
+                    }
+                    .foregroundColor(.red)
+
+                    Spacer()
+
+                    Button("Enable & Skip Pairing") {
+                        onEnable()
+                    }
+                    .disabled(authSecret.isEmpty || userId.isEmpty)
+                }
+            }
+            .padding()
+            .navigationBarHidden(true)
+        }
+    }
+}
+#endif
 
 #Preview {
     PairingView()
