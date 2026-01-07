@@ -179,7 +179,8 @@ final class WorkoutCompletionViewModelTests: XCTestCase {
             deviceInfo: WorkoutDeviceInfo(platform: "ios", model: "iPhone15,2", osVersion: "18.0"),
             heartRateSamples: nil,
             workoutStructure: workoutStructure,
-            workoutName: "Test Workout"
+            workoutName: "Test Workout",
+            isSimulated: false
         )
 
         // When encoding
@@ -215,7 +216,8 @@ final class WorkoutCompletionViewModelTests: XCTestCase {
             deviceInfo: WorkoutDeviceInfo(platform: "watchos", model: "Apple Watch", osVersion: nil),
             heartRateSamples: nil,
             workoutStructure: nil,
-            workoutName: nil
+            workoutName: nil,
+            isSimulated: false
         )
 
         // When encoding
@@ -249,7 +251,8 @@ final class WorkoutCompletionViewModelTests: XCTestCase {
             deviceInfo: WorkoutDeviceInfo(platform: "ios", model: nil, osVersion: nil),
             heartRateSamples: nil,
             workoutStructure: [],
-            workoutName: "My Workout"
+            workoutName: "My Workout",
+            isSimulated: false
         )
 
         // When encoding
