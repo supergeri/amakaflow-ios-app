@@ -539,10 +539,20 @@ struct WatchRemoteView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            Button("Retry") {
-                bridge.requestCurrentState()
+            HStack(spacing: 12) {
+                Button("Retry") {
+                    bridge.requestCurrentState()
+                }
+                .buttonStyle(.bordered)
+
+                Button("Demo") {
+                    withAnimation {
+                        demoState.toggle()
+                    }
+                }
+                .buttonStyle(.bordered)
+                .tint(.yellow)
             }
-            .buttonStyle(.bordered)
         }
     }
 
