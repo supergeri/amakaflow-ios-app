@@ -68,6 +68,8 @@
 		F85A0F1D503D8A43A7B52FCC /* AudioCueManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8FC29620578214144920365 /* AudioCueManager.swift */; };
 		F85C4F6DCDE4544563BA4983 /* WorkoutState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F883912261E9D246979DD881 /* WorkoutState.swift */; };
 		F8654CAC3BB541420480C602 /* FlattenedInterval.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82258553831E24BC9B8C650 /* FlattenedInterval.swift */; };
+		EXEC10NL0G8U1LD3R0002 /* ExecutionLogBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EXEC10NL0G8U1LD3R0001 /* ExecutionLogBuilder.swift */; };
+		SK1P1NT3RV4L5H33T0002 /* SkipIntervalSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = SK1P1NT3RV4L5H33T0001 /* SkipIntervalSheet.swift */; };
 		F87ADA7721B76045D5938EA4 /* WorkoutActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8CB18AE0DE73449FE995951 /* WorkoutActivityAttributes.swift */; };
 		F880AD612F09559A00E8D7D3 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		F880AD622F09559A00E8D7D3 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 2F0C8DCE03694CF3A60D12F9 /* Sentry */; };
@@ -240,6 +242,8 @@
 		F84E229C2ED0DC1100459747 /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS26.1.sdk/System/Library/Frameworks/WatchConnectivity.framework; sourceTree = DEVELOPER_DIR; };
 		F84E229E2ED0DC1B00459747 /* WorkoutKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WorkoutKit.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS26.1.sdk/System/Library/Frameworks/WorkoutKit.framework; sourceTree = DEVELOPER_DIR; };
 		F856B28A238E234FDAB29478 /* WorkoutEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WorkoutEngine.swift; path = ../AmakaFlow/Engine/WorkoutEngine.swift; sourceTree = SOURCE_ROOT; };
+		EXEC10NL0G8U1LD3R0001 /* ExecutionLogBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ExecutionLogBuilder.swift; path = ../AmakaFlow/Engine/ExecutionLogBuilder.swift; sourceTree = SOURCE_ROOT; };
+		SK1P1NT3RV4L5H33T0001 /* SkipIntervalSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SkipIntervalSheet.swift; path = ../AmakaFlow/Views/Components/SkipIntervalSheet.swift; sourceTree = SOURCE_ROOT; };
 		F883912261E9D246979DD881 /* WorkoutState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WorkoutState.swift; path = ../AmakaFlow/Engine/WorkoutState.swift; sourceTree = SOURCE_ROOT; };
 		F89DB8A09DD1694C469E6F54 /* PlayerControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PlayerControlsView.swift; path = ../AmakaFlow/Views/Components/PlayerControlsView.swift; sourceTree = SOURCE_ROOT; };
 		F8AD6080DEE9A54A6D9E4BD8 /* WorkoutPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WorkoutPlayerView.swift; path = ../AmakaFlow/Views/WorkoutPlayerView.swift; sourceTree = SOURCE_ROOT; };
@@ -435,7 +439,9 @@
 				F883912261E9D246979DD881 /* WorkoutState.swift */,
 				F82258553831E24BC9B8C650 /* FlattenedInterval.swift */,
 				F856B28A238E234FDAB29478 /* WorkoutEngine.swift */,
+				EXEC10NL0G8U1LD3R0001 /* ExecutionLogBuilder.swift */,
 				F8CB18AE0DE73449FE995951 /* WorkoutActivityAttributes.swift */,
+				SK1P1NT3RV4L5H33T0001 /* SkipIntervalSheet.swift */,
 				F84E22852ED0D5D100459747 /* WorkoutKitConverter.swift */,
 				F8FC29620578214144920365 /* AudioCueManager.swift */,
 				F84E227B2ED0D5BF00459747 /* IntervalRow.swift */,
@@ -880,6 +886,8 @@
 				F85C4F6DCDE4544563BA4983 /* WorkoutState.swift in Sources */,
 				F8654CAC3BB541420480C602 /* FlattenedInterval.swift in Sources */,
 				F85318ABF59B874E5BB8013B /* WorkoutEngine.swift in Sources */,
+				EXEC10NL0G8U1LD3R0002 /* ExecutionLogBuilder.swift in Sources */,
+				SK1P1NT3RV4L5H33T0002 /* SkipIntervalSheet.swift in Sources */,
 				F85A0F1D503D8A43A7B52FCC /* AudioCueManager.swift in Sources */,
 				F84682B9F2FD8A45578F0E68 /* WorkoutPlayerView.swift in Sources */,
 				F818DA94C6BD4F40EE8313B0 /* StepDisplayView.swift in Sources */,
