@@ -9,49 +9,97 @@ import Foundation
 
 // MARK: - Execution Models
 
-/// Status of an interval's execution
+/// Status of an interval's execution (v2 contract)
 enum IntervalStatus: String, Codable {
     case completed
-    case modified
     case skipped
-    case partial
+    case notReached = "not_reached"
 }
 
-/// Status of a single set within an interval
+/// Status of a single set within an interval (v2 contract)
 enum SetStatus: String, Codable {
     case completed
     case skipped
+    case notReached = "not_reached"
 }
 
-/// Execution data for a single set within an interval
+/// Source of weight for a set (v2 contract)
+enum WeightSource: String, Codable {
+    case barbell
+    case dumbbell
+    case machine
+    case bodyweight
+    case cable
+    case kettlebell
+    case other
+}
+
+/// A single weight component (e.g., bar, plates, etc.)
+struct WeightComponent: Codable {
+    let source: WeightSource
+    let value: Double
+    let unit: String
+
+    enum CodingKeys: String, CodingKey {
+        case source, value, unit
+    }
+}
+
+/// Complete weight entry with components and display label
+struct WeightEntry: Codable {
+    let components: [WeightComponent]
+    let displayLabel: String
+
+    enum CodingKeys: String, CodingKey {
+        case components
+        case displayLabel = "display_label"
+    }
+
+    /// Convenience initializer for simple single-weight entry
+    static func simple(value: Double, unit: String, source: WeightSource = .other) -> WeightEntry {
+        let component = WeightComponent(source: source, value: value, unit: unit)
+        return WeightEntry(
+            components: [component],
+            displayLabel: "\(Int(value)) \(unit)"
+        )
+    }
+
+    /// Convenience initializer from legacy weight/unit format
+    static func fromLegacy(weight: Double?, unit: String?) -> WeightEntry? {
+        guard let weight = weight, let unit = unit else { return nil }
+        return simple(value: weight, unit: unit)
+    }
+}
+
+/// Execution data for a single set within an interval (v2 contract)
 struct SetExecution: Codable {
     let setNumber: Int
     var status: SetStatus = .completed
+    var repsPlanned: Int?
     var repsCompleted: Int?
-    var weight: Double?
-    var unit: String?
-    var durationSec: Int?
+    var weight: WeightEntry?
+    var durationSeconds: Int?
     var rpe: Int?
 
     enum CodingKeys: String, CodingKey {
         case setNumber = "set_number"
         case status
+        case repsPlanned = "reps_planned"
         case repsCompleted = "reps_completed"
         case weight
-        case unit
-        case durationSec = "duration_sec"
+        case durationSeconds = "duration_seconds"
         case rpe
     }
 }
 
-/// Execution data for a single interval
+/// Execution data for a single interval (v2 contract)
 struct IntervalExecution: Codable {
     let intervalIndex: Int
-    let kind: String?
-    let name: String?
+    let plannedKind: String?
+    let plannedName: String?
     var status: IntervalStatus = .completed
-    var plannedDurationSec: Int?
-    var actualDurationSec: Int?
+    var plannedDurationSeconds: Int?
+    var actualDurationSeconds: Int?
     var startedAt: Date?
     var endedAt: Date?
     var skipReason: String?
@@ -59,11 +107,11 @@ struct IntervalExecution: Codable {
 
     enum CodingKeys: String, CodingKey {
         case intervalIndex = "interval_index"
-        case kind
-        case name
+        case plannedKind = "planned_kind"
+        case plannedName = "planned_name"
         case status
-        case plannedDurationSec = "planned_duration_sec"
-        case actualDurationSec = "actual_duration_sec"
+        case plannedDurationSeconds = "planned_duration_seconds"
+        case actualDurationSeconds = "actual_duration_seconds"
         case startedAt = "started_at"
         case endedAt = "ended_at"
         case skipReason = "skip_reason"
@@ -71,20 +119,30 @@ struct IntervalExecution: Codable {
     }
 }
 
-/// Summary statistics for execution log
+/// Summary statistics for execution log (v2 contract)
 struct ExecutionSummary: Codable {
     let totalIntervals: Int
     let completed: Int
     let skipped: Int
-    let modified: Int
+    let notReached: Int
     let completionPercentage: Double
+    let totalSets: Int
+    let setsCompleted: Int
+    let setsSkipped: Int
+    let totalDurationSeconds: Int
+    let activeDurationSeconds: Int
 
     enum CodingKeys: String, CodingKey {
         case totalIntervals = "total_intervals"
         case completed
         case skipped
-        case modified
+        case notReached = "not_reached"
         case completionPercentage = "completion_percentage"
+        case totalSets = "total_sets"
+        case setsCompleted = "sets_completed"
+        case setsSkipped = "sets_skipped"
+        case totalDurationSeconds = "total_duration_seconds"
+        case activeDurationSeconds = "active_duration_seconds"
     }
 }
 
@@ -135,10 +193,10 @@ class ExecutionLogBuilder {
 
         var interval = IntervalExecution(
             intervalIndex: index,
-            kind: kind,
-            name: name
+            plannedKind: kind,
+            plannedName: name
         )
-        interval.plannedDurationSec = plannedDuration
+        interval.plannedDurationSeconds = plannedDuration
         interval.startedAt = currentIntervalStartTime
 
         intervals.append(interval)
@@ -155,9 +213,9 @@ class ExecutionLogBuilder {
         intervals[idx].endedAt = Date()
 
         if let duration = actualDuration {
-            intervals[idx].actualDurationSec = duration
+            intervals[idx].actualDurationSeconds = duration
         } else if let startTime = currentIntervalStartTime {
-            intervals[idx].actualDurationSec = Int(Date().timeIntervalSince(startTime))
+            intervals[idx].actualDurationSeconds = Int(Date().timeIntervalSince(startTime))
         }
 
         currentIntervalIndex = nil
@@ -178,8 +236,8 @@ class ExecutionLogBuilder {
 
         var interval = IntervalExecution(
             intervalIndex: index,
-            kind: kind,
-            name: name
+            plannedKind: kind,
+            plannedName: name
         )
         interval.status = .skipped
         interval.skipReason = reason.rawValue
@@ -187,15 +245,6 @@ class ExecutionLogBuilder {
         interval.endedAt = Date()
 
         intervals.append(interval)
-    }
-
-    /// Mark the current interval as modified (duration changed from plan)
-    func markCurrentAsModified() {
-        guard let currentIndex = currentIntervalIndex,
-              let idx = intervals.firstIndex(where: { $0.intervalIndex == currentIndex }) else {
-            return
-        }
-        intervals[idx].status = .modified
     }
 
     // MARK: - Set Tracking
@@ -207,14 +256,18 @@ class ExecutionLogBuilder {
     ///   - weight: Weight used (nil if skipped)
     ///   - unit: Weight unit ("lbs" or "kg")
     ///   - reps: Reps completed
+    ///   - repsPlanned: Planned reps for this set
     ///   - skipped: Whether set was skipped
+    ///   - weightSource: Source of weight (machine, barbell, etc.)
     func logSet(
         intervalIndex: Int,
         setNumber: Int,
         weight: Double?,
         unit: String?,
         reps: Int?,
-        skipped: Bool = false
+        repsPlanned: Int? = nil,
+        skipped: Bool = false,
+        weightSource: WeightSource = .other
     ) {
         guard let idx = intervals.firstIndex(where: { $0.intervalIndex == intervalIndex }) else {
             return
@@ -222,9 +275,13 @@ class ExecutionLogBuilder {
 
         var setExec = SetExecution(setNumber: setNumber)
         setExec.status = skipped ? .skipped : .completed
-        setExec.weight = weight
-        setExec.unit = unit
+        setExec.repsPlanned = repsPlanned
         setExec.repsCompleted = reps
+
+        // Convert weight to WeightEntry if provided
+        if let w = weight, let u = unit {
+            setExec.weight = WeightEntry.simple(value: w, unit: u, source: weightSource)
+        }
 
         if intervals[idx].sets == nil {
             intervals[idx].sets = []
@@ -234,7 +291,7 @@ class ExecutionLogBuilder {
 
     // MARK: - Build Output
 
-    /// Build the final execution_log dictionary for API submission
+    /// Build the final execution_log dictionary for API submission (v2 format)
     func build() -> [String: Any] {
         // End any unclosed interval
         if currentIntervalIndex != nil {
@@ -250,10 +307,10 @@ class ExecutionLogBuilder {
                 "status": interval.status.rawValue
             ]
 
-            if let kind = interval.kind { dict["kind"] = kind }
-            if let name = interval.name { dict["name"] = name }
-            if let plannedDuration = interval.plannedDurationSec { dict["planned_duration_sec"] = plannedDuration }
-            if let actualDuration = interval.actualDurationSec { dict["actual_duration_sec"] = actualDuration }
+            if let kind = interval.plannedKind { dict["planned_kind"] = kind }
+            if let name = interval.plannedName { dict["planned_name"] = name }
+            if let plannedDuration = interval.plannedDurationSeconds { dict["planned_duration_seconds"] = plannedDuration }
+            if let actualDuration = interval.actualDurationSeconds { dict["actual_duration_seconds"] = actualDuration }
             if let startedAt = interval.startedAt { dict["started_at"] = ISO8601DateFormatter().string(from: startedAt) }
             if let endedAt = interval.endedAt { dict["ended_at"] = ISO8601DateFormatter().string(from: endedAt) }
             if let skipReason = interval.skipReason { dict["skip_reason"] = skipReason }
@@ -264,11 +321,25 @@ class ExecutionLogBuilder {
                         "set_number": set.setNumber,
                         "status": set.status.rawValue
                     ]
-                    if let weight = set.weight { setDict["weight"] = weight }
-                    if let unit = set.unit { setDict["unit"] = unit }
+                    if let repsPlanned = set.repsPlanned { setDict["reps_planned"] = repsPlanned }
                     if let reps = set.repsCompleted { setDict["reps_completed"] = reps }
-                    if let duration = set.durationSec { setDict["duration_sec"] = duration }
+                    if let duration = set.durationSeconds { setDict["duration_seconds"] = duration }
                     if let rpe = set.rpe { setDict["rpe"] = rpe }
+
+                    // Convert WeightEntry to v2 format
+                    if let weight = set.weight {
+                        let componentDicts = weight.components.map { component -> [String: Any] in
+                            return [
+                                "source": component.source.rawValue,
+                                "value": component.value,
+                                "unit": component.unit
+                            ]
+                        }
+                        setDict["weight"] = [
+                            "components": componentDicts,
+                            "display_label": weight.displayLabel
+                        ]
+                    }
                     return setDict
                 }
             }
@@ -277,32 +348,65 @@ class ExecutionLogBuilder {
         }
 
         return [
+            "version": 2,
             "intervals": intervalDicts,
             "summary": [
                 "total_intervals": summary.totalIntervals,
                 "completed": summary.completed,
                 "skipped": summary.skipped,
-                "modified": summary.modified,
-                "completion_percentage": summary.completionPercentage
+                "not_reached": summary.notReached,
+                "completion_percentage": summary.completionPercentage,
+                "total_sets": summary.totalSets,
+                "sets_completed": summary.setsCompleted,
+                "sets_skipped": summary.setsSkipped,
+                "total_duration_seconds": summary.totalDurationSeconds,
+                "active_duration_seconds": summary.activeDurationSeconds
             ]
         ]
     }
 
-    /// Calculate summary statistics
+    /// Calculate summary statistics (v2 format)
     private func calculateSummary() -> ExecutionSummary {
         let completed = intervals.filter { $0.status == .completed }.count
         let skipped = intervals.filter { $0.status == .skipped }.count
-        let modified = intervals.filter { $0.status == .modified }.count
+        let notReached = intervals.filter { $0.status == .notReached }.count
         let total = intervals.count
 
-        let completionPct = total > 0 ? Double(completed + modified) / Double(total) * 100.0 : 0.0
+        // Calculate set statistics
+        var totalSets = 0
+        var setsCompleted = 0
+        var setsSkipped = 0
+
+        for interval in intervals {
+            if let sets = interval.sets {
+                totalSets += sets.count
+                setsCompleted += sets.filter { $0.status == .completed }.count
+                setsSkipped += sets.filter { $0.status == .skipped }.count
+            }
+        }
+
+        // Calculate duration statistics
+        let totalDurationSeconds = intervals.compactMap { $0.actualDurationSeconds }.reduce(0, +)
+
+        // Active duration excludes rest intervals
+        let activeDurationSeconds = intervals
+            .filter { $0.plannedKind != "rest" }
+            .compactMap { $0.actualDurationSeconds }
+            .reduce(0, +)
+
+        let completionPct = total > 0 ? Double(completed) / Double(total) * 100.0 : 0.0
 
         return ExecutionSummary(
             totalIntervals: total,
             completed: completed,
             skipped: skipped,
-            modified: modified,
-            completionPercentage: round(completionPct * 10) / 10  // Round to 1 decimal
+            notReached: notReached,
+            completionPercentage: round(completionPct * 10) / 10,
+            totalSets: totalSets,
+            setsCompleted: setsCompleted,
+            setsSkipped: setsSkipped,
+            totalDurationSeconds: totalDurationSeconds,
+            activeDurationSeconds: activeDurationSeconds
         )
     }
 
