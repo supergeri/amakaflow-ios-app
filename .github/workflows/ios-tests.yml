@@ -9,42 +9,23 @@ on:
     - cron: '0 6 * * *'  # Nightly full test run with coverage
 
 jobs:
-  test:
-    name: Unit Tests
-    runs-on: macos-15
-    timeout-minutes: 45
+  ios-tests:
+    name: iOS Tests (Fast)
+    runs-on: macos-14
+    timeout-minutes: 90
+
+    env:
+      XCODE_VERSION: "15.2"
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Clone workoutkit-sync dependency
         run: git clone https://github.com/supergeri/workoutkit-sync.git ../../workoutkit-sync
 
       - name: Select Xcode
-        run: |
-          XCODE_PATH=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
-          if [ -z "$XCODE_PATH" ]; then
-            XCODE_PATH=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
-          fi
-          echo "Using Xcode: $XCODE_PATH"
-          sudo xcode-select -s "$XCODE_PATH"
-          # Set XCODE_VERSION for cache key (used in later steps)
-          echo "XCODE_VERSION=$(xcodebuild -version | head -1 | tr ' ' '-')" >> $GITHUB_ENV
-
-      - name: Show Xcode version
-        run: xcodebuild -version
-
-      - name: Determine simulator name
-        id: simulator
-        run: |
-          if xcrun simctl list devices available | grep -q "iPhone 17"; then
-            echo "name=iPhone 17 Pro" >> $GITHUB_OUTPUT
-          elif xcrun simctl list devices available | grep -q "iPhone 16"; then
-            echo "name=iPhone 16" >> $GITHUB_OUTPUT
-          else
-            echo "name=iPhone 15" >> $GITHUB_OUTPUT
-          fi
+        run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
 
       - name: Create stub TestCredentials for compilation
         working-directory: AmakaFlowCompanion
@@ -60,72 +41,79 @@ jobs:
           }
           EOF
 
-      # Cache DerivedData with mtime preservation for incremental builds
-      # Key insight: checkout resets mtime to current time, breaking incremental builds
-      # irgaly/xcode-cache restores mtime based on file content SHA-256 match
-      - name: Cache Xcode DerivedData
-        uses: irgaly/xcode-cache@v1
-        with:
-          key: xcode-cache-${{ runner.os }}-${{ env.XCODE_VERSION }}-${{ hashFiles('AmakaFlowCompanion/AmakaFlowCompanion.xcodeproj/project.pbxproj', 'AmakaFlow/**/*.swift') }}
-          restore-keys: |
-            xcode-cache-${{ runner.os }}-${{ env.XCODE_VERSION }}-
-          deriveddata-directory: AmakaFlowCompanion/DerivedData
-          sourcepackages-directory: AmakaFlowCompanion/DerivedData/SourcePackages
-          # Restore mtime for source files to enable incremental builds
-          # Paths are relative to repo root
-          restore-mtime-targets: |
-            AmakaFlow
-            AmakaFlowCompanion/AmakaFlowCompanion
-            AmakaFlowCompanion/AmakaFlowCompanionTests
-
-      - name: Boot simulator
+      # -----------------------------
+      # Swift Package Manager Cache
+      # -----------------------------
+      - name: Resolve SwiftPM dependencies
+        working-directory: AmakaFlowCompanion
         run: |
-          DEVICE_ID=$(xcrun simctl list devices available | grep "${{ steps.simulator.outputs.name }}" | head -1 | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}")
-          echo "Booting simulator: $DEVICE_ID"
-          xcrun simctl boot "$DEVICE_ID" || true
+          xcodebuild -resolvePackageDependencies \
+            -project AmakaFlowCompanion.xcodeproj \
+            -scheme AmakaFlowCompanion \
+            -derivedDataPath DerivedData \
+            -clonedSourcePackagesDirPath .spm
 
+      - name: Cache SwiftPM
+        uses: actions/cache@v4
+        with:
+          path: AmakaFlowCompanion/.spm
+          key: spm-${{ runner.os }}-${{ env.XCODE_VERSION }}-${{ hashFiles('**/Package.resolved', 'AmakaFlowCompanion/AmakaFlowCompanion.xcodeproj/project.pbxproj') }}
+          restore-keys: |
+            spm-${{ runner.os }}-${{ env.XCODE_VERSION }}-
+
+      # -----------------------------
+      # DerivedData Cache
+      # -----------------------------
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: AmakaFlowCompanion/DerivedData
+          key: deriveddata-${{ runner.os }}-${{ env.XCODE_VERSION }}-${{ hashFiles('AmakaFlowCompanion/AmakaFlowCompanion.xcodeproj/project.pbxproj', 'AmakaFlow/**/*.swift', 'AmakaFlowCompanion/**/*.swift') }}
+          restore-keys: |
+            deriveddata-${{ runner.os }}-${{ env.XCODE_VERSION }}-
+
+      # -----------------------------
+      # Build for Testing
+      # -----------------------------
       - name: Build for testing
         working-directory: AmakaFlowCompanion
         run: |
-          echo "::group::Build for Testing"
-          START_TIME=$(date +%s)
-
           xcodebuild build-for-testing \
             -project AmakaFlowCompanion.xcodeproj \
             -scheme AmakaFlowCompanion \
-            -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.name }}' \
+            -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
             -derivedDataPath DerivedData \
-            -IgnoreFileSystemDeviceInodeChanges=YES \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            SKIP_INSTALL=YES 2>&1 | tee build_output.log
+            -clonedSourcePackagesDirPath .spm \
+            -parallelizeTargets \
+            -jobs $(sysctl -n hw.ncpu)
 
-          END_TIME=$(date +%s)
-          echo "::endgroup::"
-          echo "Build completed in $((END_TIME - START_TIME)) seconds"
-
+      # -----------------------------
+      # Run Tests (Coverage only nightly)
+      # -----------------------------
       - name: Run tests
         working-directory: AmakaFlowCompanion
         run: |
-          echo "::group::Run Tests"
-          START_TIME=$(date +%s)
+          COVERAGE_FLAG="NO"
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            COVERAGE_FLAG="YES"
+          fi
 
           set +e
           xcodebuild test-without-building \
             -project AmakaFlowCompanion.xcodeproj \
             -scheme AmakaFlowCompanion \
-            -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.name }}' \
+            -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
             -derivedDataPath DerivedData \
+            -clonedSourcePackagesDirPath .spm \
             -only-testing:AmakaFlowCompanionTests \
             -resultBundlePath TestResults \
+            -enableCodeCoverage $COVERAGE_FLAG \
             -parallel-testing-enabled YES \
-            -parallel-testing-worker-count 4 2>&1 | tee test_output.log
+            -parallel-testing-worker-count 4 \
+            -parallelizeTargets \
+            -jobs $(sysctl -n hw.ncpu) 2>&1 | tee test_output.log
           XCODE_EXIT=${PIPESTATUS[0]}
           set -e
-
-          END_TIME=$(date +%s)
-          echo "::endgroup::"
-          echo "Tests completed in $((END_TIME - START_TIME)) seconds"
 
           # Check test output for pass/fail
           if grep -q "with 0 failures (0 unexpected)" test_output.log; then
