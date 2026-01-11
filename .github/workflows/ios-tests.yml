@@ -12,6 +12,7 @@ jobs:
   test:
     name: Unit Tests
     runs-on: macos-15
+    timeout-minutes: 60  # Fail fast if stuck
 
     steps:
       - name: Checkout code
@@ -43,19 +44,6 @@ jobs:
             echo "name=iPhone 15" >> $GITHUB_OUTPUT
           fi
 
-      # Use irgaly/xcode-cache for mtime-aware caching (enables incremental builds)
-      - name: Restore Xcode cache (DerivedData + mtime)
-        uses: irgaly/xcode-cache@v1
-        with:
-          key: xcode-deriveddata-${{ runner.os }}-${{ hashFiles('**/*.swift', '**/*.xcodeproj/project.pbxproj') }}
-          restore-keys: xcode-deriveddata-${{ runner.os }}-
-          deriveddata-directory: AmakaFlowCompanion/DerivedData
-          sourcepackages-directory: AmakaFlowCompanion/DerivedData/SourcePackages
-          restore-mtime-targets: |
-            AmakaFlow/**/*
-            AmakaFlowCompanion/**/*
-            ../../workoutkit-sync/**/*
-
       - name: Create stub TestCredentials for compilation
         working-directory: AmakaFlowCompanion
         run: |
@@ -76,33 +64,20 @@ jobs:
           echo "Booting simulator: $DEVICE_ID"
           xcrun simctl boot "$DEVICE_ID" || true
 
-      - name: Build for testing
-        working-directory: AmakaFlowCompanion
-        run: |
-          xcodebuild build-for-testing \
-            -project AmakaFlowCompanion.xcodeproj \
-            -scheme AmakaFlowCompanion \
-            -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.name }}' \
-            -derivedDataPath DerivedData \
-            -IgnoreFileSystemDeviceInodeChanges=YES \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            SKIP_INSTALL=YES
-
-      - name: Run tests (parallel, no coverage)
+      - name: Build and test
         working-directory: AmakaFlowCompanion
         run: |
           set +e
-          xcodebuild test-without-building \
+          xcodebuild test \
             -project AmakaFlowCompanion.xcodeproj \
             -scheme AmakaFlowCompanion \
             -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.name }}' \
-            -derivedDataPath DerivedData \
             -only-testing:AmakaFlowCompanionTests \
             -resultBundlePath TestResults \
-            -parallel-testing-enabled YES \
-            -parallel-testing-worker-count 4 \
-            2>&1 | tee test_output.log
+            -parallel-testing-enabled NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            SKIP_INSTALL=YES 2>&1 | tee test_output.log
           XCODE_EXIT=${PIPESTATUS[0]}
           set -e
 
@@ -130,104 +105,3 @@ jobs:
           name: test-results
           path: AmakaFlowCompanion/TestResults
           retention-days: 7
-
-  # Nightly job runs full suite with code coverage
-  nightly:
-    name: Nightly with Coverage
-    if: github.event_name == 'schedule'
-    runs-on: macos-15
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Clone workoutkit-sync dependency
-        run: git clone https://github.com/supergeri/workoutkit-sync.git ../../workoutkit-sync
-
-      - name: Select Xcode
-        run: |
-          XCODE_PATH=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
-          if [ -z "$XCODE_PATH" ]; then
-            XCODE_PATH=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
-          fi
-          sudo xcode-select -s "$XCODE_PATH"
-
-      - name: Determine simulator name
-        id: simulator
-        run: |
-          if xcrun simctl list devices available | grep -q "iPhone 17"; then
-            echo "name=iPhone 17 Pro" >> $GITHUB_OUTPUT
-          elif xcrun simctl list devices available | grep -q "iPhone 16"; then
-            echo "name=iPhone 16" >> $GITHUB_OUTPUT
-          else
-            echo "name=iPhone 15" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Restore Xcode cache (DerivedData + mtime)
-        uses: irgaly/xcode-cache@v1
-        with:
-          key: xcode-deriveddata-nightly-${{ runner.os }}-${{ hashFiles('**/*.swift', '**/*.xcodeproj/project.pbxproj') }}
-          restore-keys: xcode-deriveddata-nightly-${{ runner.os }}-
-          deriveddata-directory: AmakaFlowCompanion/DerivedData
-          sourcepackages-directory: AmakaFlowCompanion/DerivedData/SourcePackages
-          restore-mtime-targets: |
-            AmakaFlow/**/*
-            AmakaFlowCompanion/**/*
-
-      - name: Create stub TestCredentials
-        working-directory: AmakaFlowCompanion
-        run: |
-          cat > AmakaFlowCompanionUITests/TestCredentials.swift << 'EOF'
-          import Foundation
-          enum TestCredentials {
-              static let testAuthSecret = "ci-stub-not-for-testing"
-              static let userId = "ci_stub_user"
-              static let userEmail = "ci@stub.local"
-              static let userName = "CI Stub"
-              static let apiBaseURL = "http://localhost:8001"
-          }
-          EOF
-
-      - name: Boot simulator
-        run: |
-          DEVICE_ID=$(xcrun simctl list devices available | grep "${{ steps.simulator.outputs.name }}" | head -1 | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}")
-          xcrun simctl boot "$DEVICE_ID" || true
-
-      - name: Run full test suite with coverage
-        working-directory: AmakaFlowCompanion
-        run: |
-          set +e
-          xcodebuild test \
-            -project AmakaFlowCompanion.xcodeproj \
-            -scheme AmakaFlowCompanion \
-            -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.name }}' \
-            -derivedDataPath DerivedData \
-            -only-testing:AmakaFlowCompanionTests \
-            -resultBundlePath TestResults \
-            -enableCodeCoverage YES \
-            -parallel-testing-enabled YES \
-            -parallel-testing-worker-count 4 \
-            -IgnoreFileSystemDeviceInodeChanges=YES \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            SKIP_INSTALL=YES 2>&1 | tee test_output.log
-          XCODE_EXIT=${PIPESTATUS[0]}
-          set -e
-
-          if grep -q "with 0 failures (0 unexpected)" test_output.log; then
-            exit 0
-          elif grep -q "TEST SUCCEEDED" test_output.log; then
-            exit 0
-          elif grep -q "with [1-9][0-9]* failures" test_output.log; then
-            exit 1
-          else
-            exit $XCODE_EXIT
-          fi
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: nightly-test-results
-          path: AmakaFlowCompanion/TestResults
-          retention-days: 30
