@@ -12,7 +12,7 @@ jobs:
   test:
     name: Unit Tests
     runs-on: macos-15
-    timeout-minutes: 60  # Fail fast if stuck
+    timeout-minutes: 45
 
     steps:
       - name: Checkout code
@@ -29,6 +29,8 @@ jobs:
           fi
           echo "Using Xcode: $XCODE_PATH"
           sudo xcode-select -s "$XCODE_PATH"
+          # Set XCODE_VERSION for cache key (used in later steps)
+          echo "XCODE_VERSION=$(xcodebuild -version | head -1 | tr ' ' '-')" >> $GITHUB_ENV
 
       - name: Show Xcode version
         run: xcodebuild -version
@@ -58,28 +60,72 @@ jobs:
           }
           EOF
 
+      # Cache DerivedData with mtime preservation for incremental builds
+      # Key insight: checkout resets mtime to current time, breaking incremental builds
+      # irgaly/xcode-cache restores mtime based on file content SHA-256 match
+      - name: Cache Xcode DerivedData
+        uses: irgaly/xcode-cache@v1
+        with:
+          key: xcode-cache-${{ runner.os }}-${{ env.XCODE_VERSION }}-${{ hashFiles('AmakaFlowCompanion/AmakaFlowCompanion.xcodeproj/project.pbxproj', 'AmakaFlow/**/*.swift') }}
+          restore-keys: |
+            xcode-cache-${{ runner.os }}-${{ env.XCODE_VERSION }}-
+          deriveddata-directory: AmakaFlowCompanion/DerivedData
+          sourcepackages-directory: AmakaFlowCompanion/DerivedData/SourcePackages
+          # Restore mtime for source files to enable incremental builds
+          # Paths are relative to repo root
+          restore-mtime-targets: |
+            AmakaFlow
+            AmakaFlowCompanion/AmakaFlowCompanion
+            AmakaFlowCompanion/AmakaFlowCompanionTests
+
       - name: Boot simulator
         run: |
           DEVICE_ID=$(xcrun simctl list devices available | grep "${{ steps.simulator.outputs.name }}" | head -1 | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}")
           echo "Booting simulator: $DEVICE_ID"
           xcrun simctl boot "$DEVICE_ID" || true
 
-      - name: Build and test
+      - name: Build for testing
         working-directory: AmakaFlowCompanion
         run: |
-          set +e
-          xcodebuild test \
+          echo "::group::Build for Testing"
+          START_TIME=$(date +%s)
+
+          xcodebuild build-for-testing \
             -project AmakaFlowCompanion.xcodeproj \
             -scheme AmakaFlowCompanion \
             -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.name }}' \
-            -only-testing:AmakaFlowCompanionTests \
-            -resultBundlePath TestResults \
-            -parallel-testing-enabled NO \
+            -derivedDataPath DerivedData \
+            -IgnoreFileSystemDeviceInodeChanges=YES \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            SKIP_INSTALL=YES 2>&1 | tee test_output.log
+            SKIP_INSTALL=YES 2>&1 | tee build_output.log
+
+          END_TIME=$(date +%s)
+          echo "::endgroup::"
+          echo "Build completed in $((END_TIME - START_TIME)) seconds"
+
+      - name: Run tests
+        working-directory: AmakaFlowCompanion
+        run: |
+          echo "::group::Run Tests"
+          START_TIME=$(date +%s)
+
+          set +e
+          xcodebuild test-without-building \
+            -project AmakaFlowCompanion.xcodeproj \
+            -scheme AmakaFlowCompanion \
+            -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.name }}' \
+            -derivedDataPath DerivedData \
+            -only-testing:AmakaFlowCompanionTests \
+            -resultBundlePath TestResults \
+            -parallel-testing-enabled YES \
+            -parallel-testing-worker-count 4 2>&1 | tee test_output.log
           XCODE_EXIT=${PIPESTATUS[0]}
           set -e
+
+          END_TIME=$(date +%s)
+          echo "::endgroup::"
+          echo "Tests completed in $((END_TIME - START_TIME)) seconds"
 
           # Check test output for pass/fail
           if grep -q "with 0 failures (0 unexpected)" test_output.log; then
