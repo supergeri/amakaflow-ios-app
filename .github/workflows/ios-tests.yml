@@ -11,8 +11,9 @@ on:
 jobs:
   ios-tests:
     name: iOS Tests (Faster + Stable)
-    runs-on: macos-15-xlarge  # Apple Silicon M-series - 3-4x faster than standard
-    timeout-minutes: 45
+    # Note: macos-15-xlarge (Apple Silicon) would be 3-4x faster but requires billing upgrade
+    runs-on: macos-15
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
