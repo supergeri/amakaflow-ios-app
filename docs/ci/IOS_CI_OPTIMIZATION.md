@@ -4,7 +4,21 @@ This document describes the optimizations applied to the iOS CI workflow to redu
 
 ## Key Optimizations
 
-### 1. Cache Order (Critical)
+### 1. Apple Silicon Runners (Biggest Win)
+
+**Problem:** Standard macOS runners use older Intel hardware with limited resources, making Swift compilation and simulator booting slow.
+
+**Solution:** Use Apple Silicon (M-series) XL runners:
+
+```yaml
+jobs:
+  ios-tests:
+    runs-on: macos-15-xlarge  # Apple Silicon M-series - 3-4x faster
+```
+
+**Impact:** ~50% reduction in build/test time. Costs more "minutes" per run but finishes 3-4x faster, often balancing out.
+
+### 2. Cache Order (Critical)
 
 **Problem:** SwiftPM packages were being resolved BEFORE cache restoration, making every build a cold cache.
 
@@ -29,7 +43,7 @@ This document describes the optimizations applied to the iOS CI workflow to redu
   run: xcodebuild -resolvePackageDependencies ...
 ```
 
-### 2. Separate SwiftPM Cache Directory
+### 3. Separate SwiftPM Cache Directory
 
 **Problem:** Default SPM cache location varies and is hard to cache reliably.
 
@@ -46,7 +60,7 @@ This ensures:
 - Faster cache key matching
 - Separate from DerivedData for granular caching
 
-### 3. Xcode Version Stability
+### 4. Xcode Version Stability
 
 **Problem:** Xcode 26.x with iOS 26.1 simulators is slow and flaky on GitHub Actions.
 
@@ -62,7 +76,7 @@ This ensures:
     sudo xcode-select -s "$XCODE_PATH"
 ```
 
-### 4. Deterministic Simulator Selection
+### 5. Deterministic Simulator Selection
 
 **Problem:** Hardcoded simulator names (e.g., "iPhone 15 Pro") may not exist on all runners. Invalid fallback like `name=iPhone` causes destination errors.
 
@@ -82,7 +96,7 @@ This ensures:
     echo "name=$NAME" >> $GITHUB_OUTPUT
 ```
 
-### 5. Simulator Reset
+### 6. Simulator Reset
 
 **Problem:** Parallel testing causes "instruments lockdown" timeouts (120+ seconds) when simulators have stale state.
 
@@ -95,7 +109,7 @@ This ensures:
     xcrun simctl erase all || true
 ```
 
-### 6. Parallel Testing Limits
+### 7. Parallel Testing Limits
 
 **Problem:** Running 4 parallel test workers causes simulator clone timeouts and lockdown service conflicts.
 
@@ -108,7 +122,7 @@ xcodebuild test-without-building \
   -maximum-concurrent-test-simulator-destinations 2
 ```
 
-### 7. Build-Test Separation
+### 8. Build-Test Separation
 
 **Problem:** Combined build+test makes caching less effective and failures harder to diagnose.
 
@@ -135,7 +149,7 @@ xcodebuild test-without-building \
       ...
 ```
 
-### 8. Coverage Only on Nightly
+### 9. Coverage Only on Nightly
 
 **Problem:** Code coverage adds significant overhead to test execution.
 
