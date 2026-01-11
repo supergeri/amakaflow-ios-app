@@ -5,11 +5,20 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    - cron: '0 6 * * *'  # Nightly full test run with coverage
+
+env:
+  DERIVED_DATA_PATH: DerivedData
+  SCHEME: AmakaFlowCompanion
+  PROJECT: AmakaFlowCompanion/AmakaFlowCompanion.xcodeproj
 
 jobs:
-  test:
-    name: Run Unit Tests
+  build:
+    name: Build for Testing
     runs-on: macos-15
+    outputs:
+      simulator_name: ${{ steps.simulator.outputs.name }}
 
     steps:
       - name: Checkout code
@@ -23,16 +32,11 @@ jobs:
           git clone https://github.com/supergeri/workoutkit-sync.git ../../workoutkit-sync
           ls -la ../../
 
-      - name: List available Xcode versions
-        run: ls -la /Applications | grep Xcode
-
       - name: Select Xcode
         run: |
           # Use Xcode 26.x (beta) which properly handles PBXFileSystemSynchronizedRootGroup
-          # Xcode 16.x has issues with the newer project format
           XCODE_PATH=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
           if [ -z "$XCODE_PATH" ]; then
-            # Fallback to latest available Xcode
             XCODE_PATH=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
           fi
           echo "Using Xcode: $XCODE_PATH"
@@ -41,26 +45,9 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: List available simulators
-        run: xcrun simctl list devices available | grep -E "iPhone (15|16|17)" | head -10
-
-      - name: Boot simulator
-        run: |
-          # Find and boot an iPhone simulator (prefer iPhone 17 for Xcode 26.x, fallback to 16/15)
-          DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 17" | head -1 | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}")
-          if [ -z "$DEVICE_ID" ]; then
-            DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 16" | head -1 | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}")
-          fi
-          if [ -z "$DEVICE_ID" ]; then
-            DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 15" | head -1 | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}")
-          fi
-          echo "Booting simulator: $DEVICE_ID"
-          xcrun simctl boot "$DEVICE_ID" || true
-
       - name: Determine simulator name
         id: simulator
         run: |
-          # Determine which iPhone simulator to use based on availability
           if xcrun simctl list devices available | grep -q "iPhone 17"; then
             echo "name=iPhone 17 Pro" >> $GITHUB_OUTPUT
           elif xcrun simctl list devices available | grep -q "iPhone 16"; then
@@ -69,18 +56,25 @@ jobs:
             echo "name=iPhone 15" >> $GITHUB_OUTPUT
           fi
 
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/org.swift.swiftpm
+            ${{ env.DERIVED_DATA_PATH }}/SourcePackages
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
       - name: Create stub TestCredentials for compilation
         working-directory: AmakaFlowCompanion
         run: |
-          # Create stub TestCredentials.swift for UI test compilation
-          # UI tests won't run in CI (they need local API), but code must compile
           cat > AmakaFlowCompanionUITests/TestCredentials.swift << 'EOF'
           //
           //  TestCredentials.swift
           //  AmakaFlowCompanionUITests
           //
           //  CI Stub - placeholder values for compilation only
-          //  UI tests require local API and are not run in CI
           //
           import Foundation
 
@@ -92,31 +86,103 @@ jobs:
               static let apiBaseURL = "http://localhost:8001"
           }
           EOF
-          echo "Created stub TestCredentials.swift for CI compilation"
 
-      - name: Run tests
+      - name: Boot simulator
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available | grep "${{ steps.simulator.outputs.name }}" | head -1 | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}")
+          echo "Booting simulator: $DEVICE_ID"
+          xcrun simctl boot "$DEVICE_ID" || true
+
+      - name: Build for testing
         working-directory: AmakaFlowCompanion
         run: |
-          # Run tests and capture output
-          set +e
-          xcodebuild test \
+          xcodebuild build-for-testing \
             -project AmakaFlowCompanion.xcodeproj \
-            -scheme AmakaFlowCompanion \
+            -scheme ${{ env.SCHEME }} \
             -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.name }}' \
-            -only-testing:AmakaFlowCompanionTests \
-            -resultBundlePath TestResults \
-            -enableCodeCoverage YES \
-            -parallel-testing-enabled NO \
+            -derivedDataPath ${{ env.DERIVED_DATA_PATH }} \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            SKIP_INSTALL=YES 2>&1 | tee test_output.log
+            SKIP_INSTALL=YES
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-for-testing
+          path: AmakaFlowCompanion/${{ env.DERIVED_DATA_PATH }}
+          retention-days: 1
+
+  test:
+    name: Test ${{ matrix.shard.name }}
+    needs: build
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard:
+          - name: "Engine"
+            tests: "AmakaFlowCompanionTests/WorkoutEngineTests,AmakaFlowCompanionTests/WorkoutEngineEdgeCaseTests"
+          - name: "ViewModels"
+            tests: "AmakaFlowCompanionTests/WorkoutsViewModelTests,AmakaFlowCompanionTests/WorkoutCompletionViewModelTests"
+          - name: "Models"
+            tests: "AmakaFlowCompanionTests/WorkoutModelTests,AmakaFlowCompanionTests/ActivityHistoryTests"
+          - name: "Services"
+            tests: "AmakaFlowCompanionTests/PairingTests,AmakaFlowCompanionTests/WatchConnectivityTests,AmakaFlowCompanionTests/TranscriptionTests"
+          - name: "Completion"
+            tests: "AmakaFlowCompanionTests/CompletionDetailTests"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Clone workoutkit-sync dependency
+        run: |
+          git clone https://github.com/supergeri/workoutkit-sync.git ../../workoutkit-sync
+
+      - name: Select Xcode
+        run: |
+          XCODE_PATH=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XCODE_PATH" ]; then
+            XCODE_PATH=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
+          fi
+          sudo xcode-select -s "$XCODE_PATH"
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-for-testing
+          path: AmakaFlowCompanion/${{ env.DERIVED_DATA_PATH }}
+
+      - name: Boot simulator
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available | grep "${{ needs.build.outputs.simulator_name }}" | head -1 | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}")
+          echo "Booting simulator: $DEVICE_ID"
+          xcrun simctl boot "$DEVICE_ID" || true
+
+      - name: Run tests (${{ matrix.shard.name }})
+        working-directory: AmakaFlowCompanion
+        run: |
+          # Build test arguments for this shard
+          TEST_ARGS=""
+          IFS=',' read -ra TESTS <<< "${{ matrix.shard.tests }}"
+          for test in "${TESTS[@]}"; do
+            TEST_ARGS="$TEST_ARGS -only-testing:$test"
+          done
+
+          set +e
+          xcodebuild test-without-building \
+            -project AmakaFlowCompanion.xcodeproj \
+            -scheme ${{ env.SCHEME }} \
+            -destination 'platform=iOS Simulator,name=${{ needs.build.outputs.simulator_name }}' \
+            -derivedDataPath ${{ env.DERIVED_DATA_PATH }} \
+            -resultBundlePath TestResults-${{ matrix.shard.name }} \
+            -parallel-testing-enabled YES \
+            -parallel-testing-worker-count 4 \
+            $TEST_ARGS 2>&1 | tee test_output.log
           XCODE_EXIT=${PIPESTATUS[0]}
           set -e
 
-          # Check test output directly for pass/fail
-          echo "Checking test results from output..."
-
-          # Look for the final test summary line
+          # Check test output for pass/fail
           if grep -q "with 0 failures (0 unexpected)" test_output.log; then
             echo "All tests passed!"
             exit 0
@@ -128,8 +194,7 @@ jobs:
             grep "failures" test_output.log | tail -5
             exit 1
           else
-            echo "Could not determine test status, using xcodebuild exit code: $XCODE_EXIT"
-            # Show last few lines of output for debugging
+            echo "Using xcodebuild exit code: $XCODE_EXIT"
             tail -20 test_output.log
             exit $XCODE_EXIT
           fi
@@ -138,6 +203,105 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
-          path: AmakaFlowCompanion/TestResults
+          name: test-results-${{ matrix.shard.name }}
+          path: AmakaFlowCompanion/TestResults-${{ matrix.shard.name }}
           retention-days: 7
+
+  # Nightly job runs full suite with code coverage
+  nightly:
+    name: Nightly Full Suite with Coverage
+    if: github.event_name == 'schedule'
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Clone workoutkit-sync dependency
+        run: |
+          git clone https://github.com/supergeri/workoutkit-sync.git ../../workoutkit-sync
+
+      - name: Select Xcode
+        run: |
+          XCODE_PATH=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XCODE_PATH" ]; then
+            XCODE_PATH=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
+          fi
+          sudo xcode-select -s "$XCODE_PATH"
+
+      - name: Determine simulator name
+        id: simulator
+        run: |
+          if xcrun simctl list devices available | grep -q "iPhone 17"; then
+            echo "name=iPhone 17 Pro" >> $GITHUB_OUTPUT
+          elif xcrun simctl list devices available | grep -q "iPhone 16"; then
+            echo "name=iPhone 16" >> $GITHUB_OUTPUT
+          else
+            echo "name=iPhone 15" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/org.swift.swiftpm
+            DerivedData/SourcePackages
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Create stub TestCredentials
+        working-directory: AmakaFlowCompanion
+        run: |
+          cat > AmakaFlowCompanionUITests/TestCredentials.swift << 'EOF'
+          import Foundation
+          enum TestCredentials {
+              static let testAuthSecret = "ci-stub-not-for-testing"
+              static let userId = "ci_stub_user"
+              static let userEmail = "ci@stub.local"
+              static let userName = "CI Stub"
+              static let apiBaseURL = "http://localhost:8001"
+          }
+          EOF
+
+      - name: Boot simulator
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available | grep "${{ steps.simulator.outputs.name }}" | head -1 | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}")
+          xcrun simctl boot "$DEVICE_ID" || true
+
+      - name: Run full test suite with coverage
+        working-directory: AmakaFlowCompanion
+        run: |
+          set +e
+          xcodebuild test \
+            -project AmakaFlowCompanion.xcodeproj \
+            -scheme AmakaFlowCompanion \
+            -destination 'platform=iOS Simulator,name=${{ steps.simulator.outputs.name }}' \
+            -only-testing:AmakaFlowCompanionTests \
+            -resultBundlePath TestResults \
+            -enableCodeCoverage YES \
+            -parallel-testing-enabled YES \
+            -parallel-testing-worker-count 4 \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            SKIP_INSTALL=YES 2>&1 | tee test_output.log
+          XCODE_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          if grep -q "with 0 failures (0 unexpected)" test_output.log; then
+            exit 0
+          elif grep -q "TEST SUCCEEDED" test_output.log; then
+            exit 0
+          elif grep -q "with [1-9][0-9]* failures" test_output.log; then
+            exit 1
+          else
+            exit $XCODE_EXIT
+          fi
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nightly-test-results
+          path: AmakaFlowCompanion/TestResults
+          retention-days: 30
