@@ -21,14 +21,11 @@ jobs:
       - name: Clone workoutkit-sync dependency
         run: git clone https://github.com/supergeri/workoutkit-sync.git ../../workoutkit-sync
 
-      - name: Select Xcode (prefer stable 16.x)
+      - name: Select Xcode (latest available)
         id: xcode
         run: |
-          # Prefer stable Xcode 16.x if present, otherwise fall back to latest installed
-          XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)
-          if [ -z "$XCODE_PATH" ]; then
-            XCODE_PATH=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
-          fi
+          # Use latest Xcode - project requires iOS 18.6+/watchOS 11.6 which needs Xcode 26.x
+          XCODE_PATH=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
           echo "Using Xcode: $XCODE_PATH"
           sudo xcode-select -s "$XCODE_PATH"
           XCODE_VER=$(xcodebuild -version | head -1 | tr ' ' '-')
