@@ -307,6 +307,13 @@ class WorkoutEngine: ObservableObject {
         phase = .resting
         print("🏋️ enterRestPhase: phase set to .resting")
 
+        // (AMA-291) Simulate rest health data in simulation mode
+        if isSimulation, let provider = healthProvider {
+            let duration = TimeInterval(restSeconds ?? 30)  // Default 30s for manual rest
+            let _ = provider.simulateRest(duration: duration)
+            print("🎮 [Simulation] Simulated rest: \(duration)s")
+        }
+
         if let seconds = restSeconds, seconds > 0 {
             // Timed rest
             isManualRest = false
@@ -821,6 +828,31 @@ class WorkoutEngine: ObservableObject {
             name: step.label,
             plannedDuration: step.timerSeconds
         )
+
+        // (AMA-291) Simulate health data for this step in simulation mode
+        if isSimulation, let provider = healthProvider, step.stepType != .rest {
+            let duration = TimeInterval(step.timerSeconds ?? 30)  // Default 30s for untimed steps
+            let intensity: ExerciseIntensity = {
+                switch step.stepType {
+                case .timed:
+                    // Check if it's warmup or cooldown by label
+                    if step.label.lowercased().contains("warm") {
+                        return .low
+                    } else if step.label.lowercased().contains("cool") {
+                        return .low
+                    }
+                    return .high  // Default timed intervals to high intensity
+                case .reps:
+                    return .moderate  // Strength exercises
+                case .distance:
+                    return .moderate
+                case .rest:
+                    return .rest
+                }
+            }()
+            let _ = provider.simulateWork(duration: duration, intensity: intensity)
+            print("🎮 [Simulation] Simulated work: \(duration)s at \(intensity) intensity")
+        }
 
         // Announce step
         audioCueManager.announceStep(step.label, roundInfo: step.roundInfo)
