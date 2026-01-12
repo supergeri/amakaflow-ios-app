@@ -572,6 +572,12 @@ class WorkoutEngine: ObservableObject {
         print("🏋️ currentStepIndex: \(currentStepIndex), flattenedSteps.count: \(flattenedSteps.count)")
         Thread.callStackSymbols.prefix(10).forEach { print("🏋️ \($0)") }
 
+        // AMA-291: Guard against duplicate end() calls - only end if we have an active workout
+        guard phase != .ended && phase != .idle else {
+            print("🏋️ END: Already ended or idle, skipping (phase=\(phase))")
+            return
+        }
+
         // Track workout end (AMA-225)
         let endAction: String
         switch reason {
