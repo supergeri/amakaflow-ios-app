@@ -1179,6 +1179,15 @@ class WorkoutEngine: ObservableObject {
         UIApplication.shared.endBackgroundTask(backgroundTask)
         backgroundTask = .invalid
     }
+
+    // MARK: - Simulated Health Data (AMA-291)
+
+    /// Get simulated health data when in simulation mode
+    /// Returns nil if not in simulation mode or no health provider
+    func getSimulatedHealthData() -> SimulatedHealthData? {
+        guard isSimulation, let provider = healthProvider else { return nil }
+        return provider.getCollectedData()
+    }
 }
 
 // MARK: - Formatted Time Helpers

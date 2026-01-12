@@ -52,15 +52,18 @@ struct WorkoutPlayerView: View {
 
                     // Main content
                     if engine.phase == .ended, let workout = engine.workout, !shouldDismissImmediately {
+                    // AMA-291: Use simulated health data when in simulation mode
+                    let (calories, avgHR, maxHR, hrSamples) = getHealthDataForCompletion()
+
                     WorkoutCompletionView(
                         viewModel: WorkoutCompletionViewModel(
                             workoutName: workout.name,
                             durationSeconds: engine.elapsedSeconds,
                             deviceMode: deviceMode,
-                            calories: watchManager.watchActiveCalories > 0 ? Int(watchManager.watchActiveCalories) : nil,
-                            avgHeartRate: calculateAvgHeartRate(),
-                            maxHeartRate: watchManager.watchMaxHeartRate > 0 ? Int(watchManager.watchMaxHeartRate) : nil,
-                            heartRateSamples: watchManager.heartRateSamples,
+                            calories: calories,
+                            avgHeartRate: avgHR,
+                            maxHeartRate: maxHR,
+                            heartRateSamples: hrSamples,
                             onDismiss: {
                                 watchManager.clearHealthMetrics()
                                 garminManager.clearHealthMetrics()
@@ -414,6 +417,33 @@ struct WorkoutPlayerView: View {
         guard !samples.isEmpty else { return nil }
         let sum = samples.reduce(0) { $0 + $1.value }
         return sum / samples.count
+    }
+
+    // MARK: - Health Data for Completion (AMA-291)
+
+    /// Get health data for workout completion, using simulated data when in simulation mode
+    private func getHealthDataForCompletion() -> (calories: Int?, avgHR: Int?, maxHR: Int?, hrSamples: [HeartRateSample]) {
+        // Check if we have simulated health data
+        if let simulatedData = engine.getSimulatedHealthData() {
+            // Convert simulated HR samples to HeartRateSample format
+            let hrSamples = simulatedData.hrSamples.map { sample in
+                HeartRateSample(timestamp: sample.timestamp, value: sample.value)
+            }
+            return (
+                calories: simulatedData.calories > 0 ? simulatedData.calories : nil,
+                avgHR: simulatedData.avgHR > 0 ? simulatedData.avgHR : nil,
+                maxHR: simulatedData.maxHR > 0 ? simulatedData.maxHR : nil,
+                hrSamples: hrSamples
+            )
+        }
+
+        // Fall back to watch/real data
+        return (
+            calories: watchManager.watchActiveCalories > 0 ? Int(watchManager.watchActiveCalories) : nil,
+            avgHR: calculateAvgHeartRate(),
+            maxHR: watchManager.watchMaxHeartRate > 0 ? Int(watchManager.watchMaxHeartRate) : nil,
+            hrSamples: watchManager.heartRateSamples
+        )
     }
 }
 
