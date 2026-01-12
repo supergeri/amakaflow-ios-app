@@ -104,8 +104,10 @@ final class AcceleratedClock: WorkoutClock {
             guard let self = self else { return }
             // Advance virtual time by the full interval (not accelerated)
             self.virtualTime = self.virtualTime.addingTimeInterval(interval)
-            // Call callback - we're already on main queue
-            callback()
+            // Call callback on MainActor (required for Swift concurrency with @MainActor callbacks)
+            Task { @MainActor in
+                callback()
+            }
         }
         source.resume()
         timerSource = source

@@ -269,7 +269,8 @@ class WorkoutEngine: ObservableObject {
         print("🏋️ nextStep() called. currentStepIndex: \(currentStepIndex), flattenedSteps.count: \(flattenedSteps.count), phase: \(phase)")
 
         // (AMA-291) End current interval tracking before advancing
-        executionLogBuilder.endCurrentInterval(actualDuration: nil)
+        // Pass elapsedSeconds for accurate simulation mode timing
+        executionLogBuilder.endCurrentInterval(actualDuration: nil, elapsedSeconds: elapsedSeconds)
 
         // Check if current step has rest after it
         if let currentStep = currentStep {
@@ -306,6 +307,13 @@ class WorkoutEngine: ObservableObject {
 
         phase = .resting
         print("🏋️ enterRestPhase: phase set to .resting")
+
+        // (AMA-291) Simulate rest health data in simulation mode
+        if isSimulation, let provider = healthProvider {
+            let duration = TimeInterval(restSeconds ?? 30)  // Default 30s for manual rest
+            let _ = provider.simulateRest(duration: duration)
+            print("🎮 [Simulation] Simulated rest: \(duration)s")
+        }
 
         if let seconds = restSeconds, seconds > 0 {
             // Timed rest
@@ -448,16 +456,18 @@ class WorkoutEngine: ObservableObject {
         exerciseSetEntries[exerciseName]?.append(entry)
 
         // (AMA-291) Log set to execution log
+        print("📊 [AMA-291] logSetWeight: step.targetReps=\(step.targetReps ?? -1) for \(exerciseName)")
         executionLogBuilder.logSet(
             intervalIndex: currentStepIndex,
             setNumber: setNumber,
             weight: weight,
             unit: unit,
             reps: step.targetReps,
+            repsPlanned: step.targetReps,
             skipped: weight == nil
         )
 
-        print("🏋️ Logged set: \(exerciseName) set \(setNumber) - weight: \(weight ?? 0) \(unit ?? "")")
+        print("🏋️ Logged set: \(exerciseName) set \(setNumber) - weight: \(weight ?? 0) \(unit ?? ""), targetReps: \(step.targetReps ?? -1)")
 
         // Advance to next step (which may trigger rest phase)
         nextStep()
@@ -564,6 +574,12 @@ class WorkoutEngine: ObservableObject {
         print("🏋️ currentStepIndex: \(currentStepIndex), flattenedSteps.count: \(flattenedSteps.count)")
         Thread.callStackSymbols.prefix(10).forEach { print("🏋️ \($0)") }
 
+        // AMA-291: Guard against duplicate end() calls - only end if we have an active workout
+        guard phase != .ended && phase != .idle else {
+            print("🏋️ END: Already ended or idle, skipping (phase=\(phase))")
+            return
+        }
+
         // Track workout end (AMA-225)
         let endAction: String
         switch reason {
@@ -593,6 +609,29 @@ class WorkoutEngine: ObservableObject {
         }
 
         // Capture workout data before resetting state
+        let executionLog = executionLogBuilder.build()  // (AMA-291) Execution tracking
+
+        // AMA-291: Debug log the execution log contents
+        if let intervalsArray = executionLog["intervals"] as? [[String: Any]] {
+            var debugDetails = "Intervals: \(intervalsArray.count)\n"
+            for interval in intervalsArray {
+                let name = interval["planned_name"] as? String ?? "unnamed"
+                let duration = interval["actual_duration_seconds"] as? Int ?? -1
+                debugDetails += "  \(name): duration=\(duration)s"
+                if let sets = interval["sets"] as? [[String: Any]] {
+                    debugDetails += ", sets=\(sets.count)"
+                    for set in sets {
+                        let setNum = set["set_number"] as? Int ?? 0
+                        let repsCompleted = set["reps_completed"] as? Int
+                        let repsPlanned = set["reps_planned"] as? Int
+                        debugDetails += "\n    Set \(setNum): repsCompleted=\(repsCompleted ?? -1), repsPlanned=\(repsPlanned ?? -1)"
+                    }
+                }
+                debugDetails += "\n"
+            }
+            DebugLogService.shared.log("ExecutionLog Debug", details: debugDetails)
+        }
+
         let workoutData = (
             id: workout?.id,
             name: workout?.name,
@@ -600,7 +639,7 @@ class WorkoutEngine: ObservableObject {
             duration: elapsedSeconds,
             intervals: workout?.intervals,  // (AMA-237) For "Run Again" feature
             setLogs: buildSetLogs(),        // (AMA-281) Weight tracking
-            executionLog: executionLogBuilder.build()  // (AMA-291) Execution tracking
+            executionLog: executionLog  // (AMA-291) Execution tracking
         )
 
         clock.invalidateTimer()
@@ -714,11 +753,15 @@ class WorkoutEngine: ObservableObject {
             return
         }
 
-        let endedAt = Date()
+        // AMA-291: For simulation mode, calculate endedAt from durationSeconds
+        // so the server gets the correct simulated duration, not real wall-clock time
+        let endedAt = isSimulation
+            ? startedAt.addingTimeInterval(Double(durationSeconds))
+            : Date()
 
         // Get health metrics from connected watch if available
         // In E2E test mode (TEST_AUTH_SECRET set), generate mock data
-        let (avgHeartRate, activeCalories) = getHealthMetrics(durationSeconds: durationSeconds)
+        let (avgHeartRate, activeCalories, hrSamples) = getHealthMetricsWithSamples(durationSeconds: durationSeconds)
 
         Task {
             do {
@@ -730,6 +773,7 @@ class WorkoutEngine: ObservableObject {
                     durationSeconds: durationSeconds,
                     avgHeartRate: avgHeartRate,
                     activeCalories: activeCalories,
+                    heartRateSamples: hrSamples,  // (AMA-291) HR samples for chart display
                     workoutStructure: intervals,  // (AMA-240) Include workout structure for "Run Again"
                     isSimulated: isSimulation,    // (AMA-271) Flag simulated workouts
                     setLogs: setLogs,             // (AMA-281) Weight tracking
@@ -760,13 +804,23 @@ class WorkoutEngine: ObservableObject {
         }
     }
 
-    /// Get health metrics - uses simulated data in simulation mode, mock data in E2E test mode, otherwise from Watch
-    private func getHealthMetrics(durationSeconds: Int) -> (avgHeartRate: Int?, activeCalories: Int?) {
+    /// Get health metrics with HR samples - uses simulated data in simulation mode, mock data in E2E test mode, otherwise from Watch
+    /// AMA-291: Updated to return HR samples for API submission
+    private func getHealthMetricsWithSamples(durationSeconds: Int) -> (avgHeartRate: Int?, activeCalories: Int?, hrSamples: [HRSample]?) {
         // Check for simulation mode health provider first (AMA-271)
         if isSimulation, let provider = healthProvider {
             let data = provider.getCollectedData()
-            print("🏋️ [Simulation Mode] Using simulated health data: avgHR=\(data.avgHR), calories=\(data.calories)")
-            return (data.avgHR, data.calories)
+            print("🏋️ [Simulation Mode] Using simulated health data: avgHR=\(data.avgHR), calories=\(data.calories), samples=\(data.hrSamples.count)")
+
+            // Convert simulated samples to HRSample format for API
+            let apiSamples = data.hrSamples.map { sample in
+                HRSample(
+                    timestamp: ISO8601DateFormatter().string(from: sample.timestamp),
+                    value: sample.value
+                )
+            }
+
+            return (data.avgHR, data.calories, apiSamples.isEmpty ? nil : apiSamples)
         }
 
         #if DEBUG
@@ -784,7 +838,7 @@ class WorkoutEngine: ObservableObject {
             let mockCalories = Int(caloriesPerMinute * durationMinutes)
 
             print("🏋️ [E2E Test Mode] Using mock health data: avgHR=\(mockAvgHR), calories=\(mockCalories)")
-            return (mockAvgHR, mockCalories)
+            return (mockAvgHR, mockCalories, nil)
         }
         #endif
 
@@ -793,13 +847,21 @@ class WorkoutEngine: ObservableObject {
         let activeCalories: Int? = watchCals > 0 ? Int(watchCals) : nil
 
         // Try to get heart rate from watch samples
-        let hrSamples = WatchConnectivityManager.shared.heartRateSamples
-        let avgHeartRate: Int? = hrSamples.isEmpty ? nil : {
-            let sum = hrSamples.reduce(0) { $0 + $1.value }
-            return sum / hrSamples.count
+        let watchHRSamples = WatchConnectivityManager.shared.heartRateSamples
+        let avgHeartRate: Int? = watchHRSamples.isEmpty ? nil : {
+            let sum = watchHRSamples.reduce(0) { $0 + $1.value }
+            return sum / watchHRSamples.count
         }()
 
-        return (avgHeartRate, activeCalories)
+        // Convert watch samples to HRSample format for API
+        let apiSamples = watchHRSamples.map { sample in
+            HRSample(
+                timestamp: ISO8601DateFormatter().string(from: sample.timestamp),
+                value: sample.value
+            )
+        }
+
+        return (avgHeartRate, activeCalories, apiSamples.isEmpty ? nil : apiSamples)
     }
 
     // MARK: - Timer Management
@@ -815,12 +877,39 @@ class WorkoutEngine: ObservableObject {
         print("🏋️ setupCurrentStep: \(step.label), timerSeconds: \(step.timerSeconds ?? -1), stepType: \(step.stepType)")
 
         // (AMA-291) Track interval start in execution log
+        // Pass elapsedSeconds for accurate simulation mode timing
         executionLogBuilder.startInterval(
             index: currentStepIndex,
             kind: step.stepType.rawValue,
             name: step.label,
-            plannedDuration: step.timerSeconds
+            plannedDuration: step.timerSeconds,
+            elapsedSeconds: elapsedSeconds
         )
+
+        // (AMA-291) Simulate health data for this step in simulation mode
+        if isSimulation, let provider = healthProvider, step.stepType != .rest {
+            let duration = TimeInterval(step.timerSeconds ?? 30)  // Default 30s for untimed steps
+            let intensity: ExerciseIntensity = {
+                switch step.stepType {
+                case .timed:
+                    // Check if it's warmup or cooldown by label
+                    if step.label.lowercased().contains("warm") {
+                        return .low
+                    } else if step.label.lowercased().contains("cool") {
+                        return .low
+                    }
+                    return .high  // Default timed intervals to high intensity
+                case .reps:
+                    return .moderate  // Strength exercises
+                case .distance:
+                    return .moderate
+                case .rest:
+                    return .rest
+                }
+            }()
+            let _ = provider.simulateWork(duration: duration, intensity: intensity)
+            print("🎮 [Simulation] Simulated work: \(duration)s at \(intensity) intensity")
+        }
 
         // Announce step
         audioCueManager.announceStep(step.label, roundInfo: step.roundInfo)
@@ -849,12 +938,13 @@ class WorkoutEngine: ObservableObject {
 
                 print("🎮 [AMA-308] Auto-selecting weight \(simulatedWeight ?? 0) \(unit) for \(step.label) (step \(capturedStepIndex)) after \(scaledDelay)s delay")
 
-                // Start elapsed time counter for reps step (simulates time spent doing the exercise)
+                // AMA-291: Calculate simulated exercise time but DON'T start timer
+                // We add the simulated time directly in the async block to avoid double-counting
+                // (timer ticks would also increment elapsedSeconds, causing over-counting)
                 let simulatedExerciseTime = max(3, Int(scaledDelay * clock.speedMultiplier))
-                remainingSeconds = simulatedExerciseTime
-                if phase == .running {
-                    startTimer()
-                }
+
+                // Capture the simulated duration for use in async block
+                let capturedSimulatedTime = simulatedExerciseTime
 
                 DispatchQueue.main.asyncAfter(deadline: .now() + scaledDelay) { [weak self] in
                     guard let self = self else { return }
@@ -864,6 +954,11 @@ class WorkoutEngine: ObservableObject {
                         print("🎮 [AMA-308] Step already advanced from \(capturedStepIndex) to \(self.currentStepIndex), skipping weight log")
                         return
                     }
+
+                    // AMA-291: Add simulated exercise time to elapsed seconds
+                    // This ensures interval duration is tracked even when timer doesn't tick at high speeds
+                    self.elapsedSeconds += capturedSimulatedTime
+                    print("🎮 [AMA-308] Added \(capturedSimulatedTime)s simulated time, elapsed now \(self.elapsedSeconds)s")
 
                     print("🎮 [AMA-308] Logging weight \(simulatedWeight ?? 0) \(unit) for step \(capturedStepIndex)")
                     self.logSetWeight(weight: simulatedWeight, unit: unit)
@@ -1146,6 +1241,15 @@ class WorkoutEngine: ObservableObject {
 
         UIApplication.shared.endBackgroundTask(backgroundTask)
         backgroundTask = .invalid
+    }
+
+    // MARK: - Simulated Health Data (AMA-291)
+
+    /// Get simulated health data when in simulation mode
+    /// Returns nil if not in simulation mode or no health provider
+    func getSimulatedHealthData() -> SimulatedHealthData? {
+        guard isSimulation, let provider = healthProvider else { return nil }
+        return provider.getCollectedData()
     }
 }
 
