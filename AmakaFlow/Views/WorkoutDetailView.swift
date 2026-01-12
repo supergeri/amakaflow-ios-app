@@ -19,6 +19,7 @@ struct WorkoutDetailView: View {
     @State private var showingDeviceSheet = false
     @State private var watchSent = false
     @State private var calendarScheduled = false
+    @State private var pendingWorkoutStart = false  // Track if we should start workout after sheet dismisses
     
     var body: some View {
         NavigationStack {
@@ -268,7 +269,18 @@ struct WorkoutDetailView: View {
                     }
                 )
             }
-            .sheet(isPresented: $showingDeviceSheet) {
+            .sheet(isPresented: $showingDeviceSheet, onDismiss: {
+                // When sheet is fully dismissed and we have a pending workout start
+                if pendingWorkoutStart {
+                    pendingWorkoutStart = false
+                    // Start the workout engine
+                    WorkoutEngine.shared.start(workout: workout)
+                    // Use a small delay to ensure clean transition
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        showingWorkoutPlayer = true
+                    }
+                }
+            }) {
                 PreWorkoutDeviceSheet(
                     workout: workout,
                     appleWatchConnected: WatchConnectivityManager.shared.isWatchReachable,
@@ -276,12 +288,8 @@ struct WorkoutDetailView: View {
                     amazfitConnected: false,
                     onSelectDevice: { device in
                         devicePreference = device // Save to UserDefaults
-                        showingDeviceSheet = false
-                        WorkoutEngine.shared.start(workout: workout)
-                        // Small delay to let sheet dismiss before showing player
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            showingWorkoutPlayer = true
-                        }
+                        pendingWorkoutStart = true  // Mark that we want to start after sheet dismisses
+                        showingDeviceSheet = false  // This triggers onDismiss when animation completes
                     },
                     onClose: {
                         showingDeviceSheet = false
