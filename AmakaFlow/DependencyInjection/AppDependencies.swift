@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import WatchConnectivity
 
 /// Container for all app dependencies
 /// Use `.live` for production and `.mock` for testing
@@ -15,6 +16,7 @@ struct AppDependencies {
     let pairingService: PairingServiceProviding
     let audioService: AudioProviding
     let progressStore: ProgressStoreProviding
+    let watchSession: WatchSessionProviding
 
     /// Live dependencies using real service implementations
     @MainActor
@@ -22,7 +24,8 @@ struct AppDependencies {
         apiService: APIService.shared,
         pairingService: PairingService.shared,
         audioService: AudioCueManager(),
-        progressStore: LiveProgressStore.shared
+        progressStore: LiveProgressStore.shared,
+        watchSession: LiveWatchSession.shared
     )
 
     /// Mock dependencies for unit testing
@@ -31,7 +34,8 @@ struct AppDependencies {
         apiService: MockAPIService(),
         pairingService: MockPairingService(),
         audioService: MockAudioService(),
-        progressStore: MockProgressStore()
+        progressStore: MockProgressStore(),
+        watchSession: MockWatchSession()
     )
 }
 
@@ -378,5 +382,99 @@ class MockProgressStore: ProgressStoreProviding {
     func clear() {
         clearCalled = true
         storedProgress = nil
+    }
+}
+
+/// Mock watch session for testing
+class MockWatchSession: WatchSessionProviding {
+    // MARK: - Configurable State
+
+    var isWatchAppInstalled: Bool = true
+    var isReachable: Bool = true
+    var isPaired: Bool = true
+    var activationState: WCSessionActivationState = .activated
+    weak var delegate: WCSessionDelegate?
+
+    // MARK: - Call Tracking
+
+    var activateCalled = false
+    var sendMessageCalled = false
+    var sentMessages: [[String: Any]] = []
+    var lastReplyHandler: (([String: Any]) -> Void)?
+    var lastErrorHandler: ((Error) -> Void)?
+    var transferUserInfoCalled = false
+    var transferredUserInfo: [[String: Any]] = []
+    var updateApplicationContextCalled = false
+    var lastApplicationContext: [String: Any]?
+
+    // MARK: - Configurable Behavior
+
+    /// Error to trigger in errorHandler when sendMessage is called
+    var sendMessageError: Error?
+
+    /// Reply to return when sendMessage is called
+    var sendMessageReply: [String: Any]?
+
+    /// Error to throw when updateApplicationContext is called
+    var updateContextError: Error?
+
+    // MARK: - Protocol Implementation
+
+    func activate() {
+        activateCalled = true
+    }
+
+    func sendMessage(
+        _ message: [String: Any],
+        replyHandler: (([String: Any]) -> Void)?,
+        errorHandler: ((Error) -> Void)?
+    ) {
+        sendMessageCalled = true
+        sentMessages.append(message)
+        lastReplyHandler = replyHandler
+        lastErrorHandler = errorHandler
+
+        // Simulate error if configured
+        if let error = sendMessageError {
+            errorHandler?(error)
+        } else if let reply = sendMessageReply {
+            replyHandler?(reply)
+        }
+    }
+
+    @discardableResult
+    func transferUserInfo(_ userInfo: [String: Any]) -> WCSessionUserInfoTransfer? {
+        transferUserInfoCalled = true
+        transferredUserInfo.append(userInfo)
+        return nil  // Mock doesn't create real transfer objects
+    }
+
+    func updateApplicationContext(_ applicationContext: [String: Any]) throws {
+        updateApplicationContextCalled = true
+        lastApplicationContext = applicationContext
+        if let error = updateContextError {
+            throw error
+        }
+    }
+
+    // MARK: - Test Helpers
+
+    /// Simulate receiving a message from watch (calls delegate method)
+    func simulateReceivedMessage(_ message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
+        // This would need a real WCSession to work, but for testing we can track the call
+        // In a real test, you would call the delegate method directly on the manager
+    }
+
+    /// Reset all call tracking state
+    func reset() {
+        activateCalled = false
+        sendMessageCalled = false
+        sentMessages.removeAll()
+        lastReplyHandler = nil
+        lastErrorHandler = nil
+        transferUserInfoCalled = false
+        transferredUserInfo.removeAll()
+        updateApplicationContextCalled = false
+        lastApplicationContext = nil
     }
 }
