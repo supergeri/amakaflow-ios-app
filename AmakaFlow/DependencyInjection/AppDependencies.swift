@@ -38,6 +38,33 @@ struct AppDependencies {
         progressStore: MockProgressStore(),
         watchSession: MockWatchSession()
     )
+
+    #if DEBUG
+    /// Fixture dependencies for E2E testing with JSON fixture data
+    /// Uses FixtureAPIService (bundled JSON, canned writes) with real UI services
+    @MainActor
+    static let fixture = AppDependencies(
+        apiService: FixtureAPIService(),
+        pairingService: PairingService.shared,
+        audioService: AudioCueManager(),
+        progressStore: LiveProgressStore.shared,
+        watchSession: LiveWatchSession.shared
+    )
+
+    /// Returns the appropriate dependencies based on environment:
+    /// - `.fixture` when UITEST_USE_FIXTURES=true
+    /// - `.live` otherwise
+    @MainActor
+    static var current: AppDependencies {
+        if TestAuthStore.shared.useFixtures {
+            return .fixture
+        }
+        return .live
+    }
+    #else
+    @MainActor
+    static var current: AppDependencies { .live }
+    #endif
 }
 
 // MARK: - Mock Implementations

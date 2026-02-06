@@ -104,6 +104,7 @@ struct WorkoutPlayerView: View {
         }
         // Note: Removed .id("player-\(engine.stateVersion)") as it caused @State to reset
         // when stateVersion changed, dismissing the end workout confirmation dialog
+        .accessibilityIdentifier("workout_player_screen")
         .navigationBarHidden(true)
         .statusBarHidden(engine.phase == .running)
         .alert("End Workout?", isPresented: $showEndConfirmation) {

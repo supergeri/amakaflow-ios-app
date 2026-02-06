@@ -11,7 +11,7 @@ import Sentry
 @main
 struct AmakaFlowCompanionApp: App {
     @StateObject private var pairingService = PairingService.shared
-    @StateObject private var workoutsViewModel = WorkoutsViewModel()
+    @StateObject private var workoutsViewModel: WorkoutsViewModel
     @StateObject private var watchConnectivity = WatchConnectivityManager.shared
     @StateObject private var garminConnectivity = GarminConnectManager.shared
 
@@ -19,11 +19,21 @@ struct AmakaFlowCompanionApp: App {
         // Note: E2E test auth bypass (AMA-232) is handled in PairingService.init()
         // to ensure isPaired is set before SwiftUI evaluates the body
 
+        // Wire up fixture dependencies when UITEST_USE_FIXTURES=true (AMA-544)
         #if DEBUG
+        if TestAuthStore.shared.useFixtures {
+            _workoutsViewModel = StateObject(wrappedValue: WorkoutsViewModel(dependencies: .fixture))
+            print("[AmakaFlowCompanionApp] Fixture mode: using FixtureAPIService")
+        } else {
+            _workoutsViewModel = StateObject(wrappedValue: WorkoutsViewModel())
+        }
+
         if TestAuthStore.shared.isTestModeEnabled {
             print("[AmakaFlowCompanionApp] UITEST/Test mode active - auth bypass via TestAuthStore")
             print("[AmakaFlowCompanionApp] useFixtures=\(TestAuthStore.shared.useFixtures), skipOnboarding=\(TestAuthStore.shared.skipOnboarding)")
         }
+        #else
+        _workoutsViewModel = StateObject(wrappedValue: WorkoutsViewModel())
         #endif
 
         // Initialize Sentry error tracking (AMA-225)

@@ -33,6 +33,14 @@
 		B69E1808FE344A15848A3B67 /* WorkoutCompletionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B1F098698F14683BCACADE0 /* WorkoutCompletionService.swift */; };
 		CA268753E918494FAD7CCD56 /* PairingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85D3757E5B284286B341C75C /* PairingService.swift */; };
 		T35T4UTH5T0R300000002 /* TestAuthStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = T35T4UTH5T0R300000001 /* TestAuthStore.swift */; };
+		F1XTUR3L0AD3R0000002 /* FixtureLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1XTUR3L0AD3R0000001 /* FixtureLoader.swift */; };
+		F1XTUR34P15RV0000002 /* FixtureAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1XTUR34P15RV0000001 /* FixtureAPIService.swift */; };
+		F1XTUR3JS0N01000001 /* amrap_10min.json in Resources */ = {isa = PBXBuildFile; fileRef = F1XTUR3JS0N00000001 /* amrap_10min.json */; };
+		F1XTUR3JS0N01000002 /* emom_strength.json in Resources */ = {isa = PBXBuildFile; fileRef = F1XTUR3JS0N00000002 /* emom_strength.json */; };
+		F1XTUR3JS0N01000003 /* for_time_conditioning.json in Resources */ = {isa = PBXBuildFile; fileRef = F1XTUR3JS0N00000003 /* for_time_conditioning.json */; };
+		F1XTUR3JS0N01000004 /* strength_block_w1.json in Resources */ = {isa = PBXBuildFile; fileRef = F1XTUR3JS0N00000004 /* strength_block_w1.json */; };
+		F1XTUR3JS0N01000005 /* running_long.json in Resources */ = {isa = PBXBuildFile; fileRef = F1XTUR3JS0N00000005 /* running_long.json */; };
+		F1XTUR3JS0N01000006 /* hiit_follow_along.json in Resources */ = {isa = PBXBuildFile; fileRef = F1XTUR3JS0N00000006 /* hiit_follow_along.json */; };
 		D3BUG10G00000001C0000001 /* DebugLogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3BUG10G00000001B0000001 /* DebugLogService.swift */; };
 		D3BUG10G00000002C0000002 /* DebugLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3BUG10G00000002B0000002 /* DebugLogView.swift */; };
 		E33FF845EAAD4110B7D87FB0 /* DevicePreference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89321AF9D21D441198437105 /* DevicePreference.swift */; };
@@ -203,6 +211,14 @@
 		5F86F482904144B39B954F6A /* Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Environment.swift; path = ../AmakaFlow/Models/Environment.swift; sourceTree = SOURCE_ROOT; };
 		85D3757E5B284286B341C75C /* PairingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PairingService.swift; path = ../AmakaFlow/Services/PairingService.swift; sourceTree = SOURCE_ROOT; };
 		T35T4UTH5T0R300000001 /* TestAuthStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TestAuthStore.swift; path = ../AmakaFlow/Services/TestAuthStore.swift; sourceTree = SOURCE_ROOT; };
+		F1XTUR3L0AD3R0000001 /* FixtureLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FixtureLoader.swift; path = ../AmakaFlow/Services/FixtureLoader.swift; sourceTree = SOURCE_ROOT; };
+		F1XTUR34P15RV0000001 /* FixtureAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FixtureAPIService.swift; path = ../AmakaFlow/DependencyInjection/FixtureAPIService.swift; sourceTree = SOURCE_ROOT; };
+		F1XTUR3JS0N00000001 /* amrap_10min.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = amrap_10min.json; path = ../AmakaFlow/Resources/Fixtures/amrap_10min.json; sourceTree = SOURCE_ROOT; };
+		F1XTUR3JS0N00000002 /* emom_strength.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = emom_strength.json; path = ../AmakaFlow/Resources/Fixtures/emom_strength.json; sourceTree = SOURCE_ROOT; };
+		F1XTUR3JS0N00000003 /* for_time_conditioning.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = for_time_conditioning.json; path = ../AmakaFlow/Resources/Fixtures/for_time_conditioning.json; sourceTree = SOURCE_ROOT; };
+		F1XTUR3JS0N00000004 /* strength_block_w1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = strength_block_w1.json; path = ../AmakaFlow/Resources/Fixtures/strength_block_w1.json; sourceTree = SOURCE_ROOT; };
+		F1XTUR3JS0N00000005 /* running_long.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = running_long.json; path = ../AmakaFlow/Resources/Fixtures/running_long.json; sourceTree = SOURCE_ROOT; };
+		F1XTUR3JS0N00000006 /* hiit_follow_along.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = hiit_follow_along.json; path = ../AmakaFlow/Resources/Fixtures/hiit_follow_along.json; sourceTree = SOURCE_ROOT; };
 		89321AF9D21D441198437105 /* DevicePreference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DevicePreference.swift; path = ../AmakaFlow/Models/DevicePreference.swift; sourceTree = SOURCE_ROOT; };
 		8B1F098698F14683BCACADE0 /* WorkoutCompletionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WorkoutCompletionService.swift; path = ../AmakaFlow/Services/WorkoutCompletionService.swift; sourceTree = SOURCE_ROOT; };
 		94AE3547CCCD41159C85554B /* RestPeriodView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RestPeriodView.swift; path = ../AmakaFlow/Views/Components/RestPeriodView.swift; sourceTree = SOURCE_ROOT; };
@@ -558,6 +574,14 @@
 				11B5892FB68A40CB890E3630 /* KeychainHelper.swift */,
 				85D3757E5B284286B341C75C /* PairingService.swift */,
 				T35T4UTH5T0R300000001 /* TestAuthStore.swift */,
+				F1XTUR3L0AD3R0000001 /* FixtureLoader.swift */,
+				F1XTUR34P15RV0000001 /* FixtureAPIService.swift */,
+				F1XTUR3JS0N00000001 /* amrap_10min.json */,
+				F1XTUR3JS0N00000002 /* emom_strength.json */,
+				F1XTUR3JS0N00000003 /* for_time_conditioning.json */,
+				F1XTUR3JS0N00000004 /* strength_block_w1.json */,
+				F1XTUR3JS0N00000005 /* running_long.json */,
+				F1XTUR3JS0N00000006 /* hiit_follow_along.json */,
 				8B1F098698F14683BCACADE0 /* WorkoutCompletionService.swift */,
 				29B50DC380A44F2D96E6E414 /* PairingView.swift */,
 				1FC49A15AC3F44858DFEE3E6 /* QRScannerView.swift */,
@@ -824,6 +848,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F1XTUR3JS0N01000001 /* amrap_10min.json in Resources */,
+				F1XTUR3JS0N01000002 /* emom_strength.json in Resources */,
+				F1XTUR3JS0N01000003 /* for_time_conditioning.json in Resources */,
+				F1XTUR3JS0N01000004 /* strength_block_w1.json in Resources */,
+				F1XTUR3JS0N01000005 /* running_long.json in Resources */,
+				F1XTUR3JS0N01000006 /* hiit_follow_along.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -898,6 +928,8 @@
 				444EFC17D69346B3B93C9ECA /* KeychainHelper.swift in Sources */,
 				CA268753E918494FAD7CCD56 /* PairingService.swift in Sources */,
 				T35T4UTH5T0R300000002 /* TestAuthStore.swift in Sources */,
+				F1XTUR3L0AD3R0000002 /* FixtureLoader.swift in Sources */,
+				F1XTUR34P15RV0000002 /* FixtureAPIService.swift in Sources */,
 				B69E1808FE344A15848A3B67 /* WorkoutCompletionService.swift in Sources */,
 				40E350E9B26F4574902587EF /* PairingView.swift in Sources */,
 				1A7B03C2552441FEB810773A /* QRScannerView.swift in Sources */,

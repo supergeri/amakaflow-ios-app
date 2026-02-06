@@ -56,6 +56,7 @@ struct WorkoutCompletionView: View {
                 .padding(.horizontal, Theme.Spacing.lg)
                 .padding(.vertical, Theme.Spacing.xl)
             }
+            .accessibilityIdentifier("workout_completion_screen")
 
             // Coming Soon toast
             if viewModel.showComingSoonToast {
@@ -291,6 +292,7 @@ struct WorkoutCompletionView: View {
                     .background(Theme.Colors.accentBlue)
                     .cornerRadius(Theme.CornerRadius.md)
             }
+            .accessibilityIdentifier("completion_done_button")
         }
     }
 

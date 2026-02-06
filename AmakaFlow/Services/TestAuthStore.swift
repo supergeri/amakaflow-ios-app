@@ -112,6 +112,27 @@ class TestAuthStore {
         #endif
     }
 
+    /// Comma-separated fixture filenames to load (without .json extension)
+    /// When nil, all bundled fixtures are loaded
+    var fixtureNames: [String]? {
+        #if DEBUG
+        guard let value = ProcessInfo.processInfo.environment["UITEST_FIXTURES"],
+              !value.isEmpty else { return nil }
+        return value.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        #else
+        return nil
+        #endif
+    }
+
+    /// Special fixture state: "empty" (no workouts) or "error" (simulate API failure)
+    var fixtureState: String? {
+        #if DEBUG
+        return ProcessInfo.processInfo.environment["UITEST_FIXTURE_STATE"]
+        #else
+        return nil
+        #endif
+    }
+
     /// Whether onboarding screens should be skipped (forward-compatible, no onboarding screens exist yet)
     var skipOnboarding: Bool {
         #if DEBUG

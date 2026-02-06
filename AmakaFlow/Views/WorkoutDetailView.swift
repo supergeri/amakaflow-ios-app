@@ -89,6 +89,7 @@ struct WorkoutDetailView: View {
                             )
                             .cornerRadius(Theme.CornerRadius.md)
                         }
+                        .accessibilityIdentifier("start_follow_along_button")
 
                         // Convert to WorkoutKit (Save to Apple Fitness)
                         if #available(iOS 18.0, *) {
@@ -243,6 +244,7 @@ struct WorkoutDetailView: View {
             .background(Theme.Colors.background.ignoresSafeArea())
             .navigationTitle(workout.name)
             .navigationBarTitleDisplayMode(.inline)
+            .accessibilityIdentifier("workout_detail_screen")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: { dismiss() }) {
