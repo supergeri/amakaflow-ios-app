@@ -199,6 +199,7 @@ private struct DeviceOptionRow: View {
             .cornerRadius(Theme.CornerRadius.md)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("device_option_\(option.preference.rawValue)")
     }
 
     private var deviceIcon: some View {
