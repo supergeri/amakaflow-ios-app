@@ -9,12 +9,35 @@ on:
       - ".github/ISSUE_TEMPLATE/**"
 
 jobs:
+  detect-changes:
+    name: Detect Changed Files
+    runs-on: macos-15
+    timeout-minutes: 5
+    outputs:
+      watch_changed: ${{ steps.changes.outputs.watch_changed }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed for diff base...head
+
+      - name: Detect watch file changes
+        id: changes
+        run: |
+          CHANGED=$(git diff --name-only "origin/${GITHUB_BASE_REF:-main}...HEAD" || true)
+          WATCH_CHANGED="false"
+          if echo "$CHANGED" | grep -qE '(AmakaFlowWatch Watch App/|AmakaFlowWatch Watch AppTests/|AmakaFlowWatch Watch AppUITests/)'; then
+            WATCH_CHANGED="true"
+          fi
+          echo "watch_changed=$WATCH_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "Watch files changed: $WATCH_CHANGED"
+
   ios-tests:
     name: iOS Tests (PR - Impacted)
     runs-on: macos-15
+    needs: detect-changes
     timeout-minutes: 30  # Reduced from 60 for PR runs
-    outputs:
-      watch_changed: ${{ steps.affected.outputs.watch_changed }}
 
     steps:
       - name: Checkout
@@ -98,15 +121,6 @@ jobs:
           echo "result=$RESULT" >> "$GITHUB_OUTPUT"
           echo "Affected iOS result: $RESULT"
 
-          # Check if watchOS files changed (separate from iOS affected test detection)
-          CHANGED=$(git diff --name-only "origin/${GITHUB_BASE_REF:-main}...HEAD" || true)
-          WATCH_CHANGED="false"
-          if echo "$CHANGED" | grep -qE '(AmakaFlowWatch Watch App/|\.xcodeproj/)'; then
-            WATCH_CHANGED="true"
-          fi
-          echo "watch_changed=$WATCH_CHANGED" >> "$GITHUB_OUTPUT"
-          echo "Watch files changed: $WATCH_CHANGED"
-
       - name: Build for testing
         if: steps.affected.outputs.result != 'NONE'
         working-directory: AmakaFlowCompanion
@@ -189,9 +203,9 @@ jobs:
   watchos-tests:
     name: watchOS Tests (PR - Impacted)
     runs-on: macos-15
-    needs: ios-tests
-    # Only run if iOS job detected watch file changes; skip if iOS job was skipped
-    if: needs.ios-tests.outputs.watch_changed == 'true'
+    needs: detect-changes
+    # Only run if detect-changes job found watch file changes
+    if: needs.detect-changes.outputs.watch_changed == 'true'
     timeout-minutes: 30
 
     steps:
@@ -248,7 +262,7 @@ jobs:
         run: |
           xcodebuild -resolvePackageDependencies \
             -project AmakaFlowCompanion.xcodeproj \
-            -scheme AmakaFlowCompanion \
+            -scheme "AmakaFlowWatch Watch App" \
             -derivedDataPath DerivedData \
             -clonedSourcePackagesDirPath .spm
 
@@ -257,7 +271,7 @@ jobs:
         run: |
           xcodebuild build-for-testing \
             -project AmakaFlowCompanion.xcodeproj \
-            -scheme AmakaFlowCompanion \
+            -scheme "AmakaFlowWatch Watch App" \
             -destination "platform=watchOS Simulator,name=${{ steps.watch-simulator.outputs.name }}" \
             -derivedDataPath DerivedData \
             -clonedSourcePackagesDirPath .spm \
@@ -270,7 +284,7 @@ jobs:
           set +e
           xcodebuild test-without-building \
             -project AmakaFlowCompanion.xcodeproj \
-            -scheme AmakaFlowCompanion \
+            -scheme "AmakaFlowWatch Watch App" \
             -destination "platform=watchOS Simulator,name=${{ steps.watch-simulator.outputs.name }}" \
             -derivedDataPath DerivedData \
             -clonedSourcePackagesDirPath .spm \
@@ -291,7 +305,7 @@ jobs:
           set +e
           xcodebuild test-without-building \
             -project AmakaFlowCompanion.xcodeproj \
-            -scheme AmakaFlowCompanion \
+            -scheme "AmakaFlowWatch Watch App" \
             -destination "platform=watchOS Simulator,name=${{ steps.watch-simulator.outputs.name }}" \
             -derivedDataPath DerivedData \
             -clonedSourcePackagesDirPath .spm \

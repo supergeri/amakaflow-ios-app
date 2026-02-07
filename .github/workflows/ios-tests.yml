@@ -240,7 +240,7 @@ jobs:
         run: |
           xcodebuild -resolvePackageDependencies \
             -project AmakaFlowCompanion.xcodeproj \
-            -scheme AmakaFlowCompanion \
+            -scheme "AmakaFlowWatch Watch App" \
             -derivedDataPath DerivedData \
             -clonedSourcePackagesDirPath .spm
 
@@ -252,7 +252,7 @@ jobs:
         run: |
           xcodebuild build-for-testing \
             -project AmakaFlowCompanion.xcodeproj \
-            -scheme AmakaFlowCompanion \
+            -scheme "AmakaFlowWatch Watch App" \
             -destination "platform=watchOS Simulator,name=${{ steps.watch-simulator.outputs.name }}" \
             -derivedDataPath DerivedData \
             -clonedSourcePackagesDirPath .spm \
@@ -268,7 +268,7 @@ jobs:
           set +e
           xcodebuild test-without-building \
             -project AmakaFlowCompanion.xcodeproj \
-            -scheme AmakaFlowCompanion \
+            -scheme "AmakaFlowWatch Watch App" \
             -destination "platform=watchOS Simulator,name=${{ steps.watch-simulator.outputs.name }}" \
             -derivedDataPath DerivedData \
             -clonedSourcePackagesDirPath .spm \
@@ -293,7 +293,7 @@ jobs:
           set +e
           xcodebuild test-without-building \
             -project AmakaFlowCompanion.xcodeproj \
-            -scheme AmakaFlowCompanion \
+            -scheme "AmakaFlowWatch Watch App" \
             -destination "platform=watchOS Simulator,name=${{ steps.watch-simulator.outputs.name }}" \
             -derivedDataPath DerivedData \
             -clonedSourcePackagesDirPath .spm \

@@ -264,6 +264,8 @@ final class WatchGoldenPathTests: XCTestCase {
             }
         }
 
+        XCTAssertTrue(exitedDemo, "Should find and tap an exit/close button to leave demo mode")
+
         if exitedDemo {
             sleep(1)
             // After exiting demo, should see regular idle/disconnected screen
@@ -324,13 +326,10 @@ final class WatchGoldenPathTests: XCTestCase {
         let caloriesText = app.staticTexts["87"]
 
         // Heart rate and calories are shown in demo mode
-        if heartRateText.waitForExistence(timeout: 5) {
-            XCTAssertTrue(true, "Heart rate displayed in demo mode")
-        }
-
-        if caloriesText.waitForExistence(timeout: 3) {
-            XCTAssertTrue(true, "Calories displayed in demo mode")
-        }
+        let heartRateVisible = heartRateText.waitForExistence(timeout: 5)
+        let caloriesVisible = caloriesText.waitForExistence(timeout: 3)
+        XCTAssertTrue(heartRateVisible || caloriesVisible,
+                      "Heart rate or calories should be displayed in demo mode")
 
         let screenshot = XCTAttachment(screenshot: app.screenshot())
         screenshot.name = "Heart Rate Display"
