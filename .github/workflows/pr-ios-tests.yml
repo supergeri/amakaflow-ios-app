@@ -1,4 +1,4 @@
-name: PR iOS Tests (Impacted)
+name: PR iOS & watchOS Tests (Impacted)
 
 on:
   pull_request:
@@ -13,6 +13,8 @@ jobs:
     name: iOS Tests (PR - Impacted)
     runs-on: macos-15
     timeout-minutes: 30  # Reduced from 60 for PR runs
+    outputs:
+      watch_changed: ${{ steps.affected.outputs.watch_changed }}
 
     steps:
       - name: Checkout
@@ -94,7 +96,16 @@ jobs:
           chmod +x .github/scripts/affected-tests-ios.sh
           RESULT=$(.github/scripts/affected-tests-ios.sh)
           echo "result=$RESULT" >> "$GITHUB_OUTPUT"
-          echo "Affected result: $RESULT"
+          echo "Affected iOS result: $RESULT"
+
+          # Check if watchOS files changed (separate from iOS affected test detection)
+          CHANGED=$(git diff --name-only "origin/${GITHUB_BASE_REF:-main}...HEAD" || true)
+          WATCH_CHANGED="false"
+          if echo "$CHANGED" | grep -qE '(AmakaFlowWatch Watch App/|\.xcodeproj/)'; then
+            WATCH_CHANGED="true"
+          fi
+          echo "watch_changed=$WATCH_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "Watch files changed: $WATCH_CHANGED"
 
       - name: Build for testing
         if: steps.affected.outputs.result != 'NONE'
@@ -167,6 +178,140 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
+          name: ios-test-results
           path: AmakaFlowCompanion/TestResults
+          retention-days: 7
+
+  # ---------------------------------------------------------
+  # watchOS Tests (conditional - only if watch files changed)
+  # Part of AMA-553: Watch app test automation coverage
+  # ---------------------------------------------------------
+  watchos-tests:
+    name: watchOS Tests (PR - Impacted)
+    runs-on: macos-15
+    needs: ios-tests
+    # Only run if iOS job detected watch file changes; skip if iOS job was skipped
+    if: needs.ios-tests.outputs.watch_changed == 'true'
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clone workoutkit-sync dependency
+        run: git clone https://github.com/supergeri/workoutkit-sync.git ../../workoutkit-sync
+
+      - name: Select Xcode (latest available)
+        id: xcode
+        run: |
+          XCODE_PATH=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
+          echo "Using Xcode: $XCODE_PATH"
+          sudo xcode-select -s "$XCODE_PATH"
+          XCODE_VER=$(xcodebuild -version | head -1 | tr ' ' '-')
+          echo "version=$XCODE_VER" >> $GITHUB_OUTPUT
+
+      - name: Determine watch simulator (first available Apple Watch)
+        id: watch-simulator
+        run: |
+          NAME=$(xcrun simctl list devices available | grep -o 'Apple Watch [^(]*' | head -1 | sed 's/ *$//')
+          if [ -z "$NAME" ]; then
+            echo "No available Apple Watch simulator found" >&2
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "Using watch simulator: $NAME"
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+
+      - name: Reset simulators
+        run: |
+          xcrun simctl shutdown all || true
+          xcrun simctl erase all || true
+
+      - name: Restore SwiftPM cache
+        uses: actions/cache@v4
+        with:
+          path: AmakaFlowCompanion/.spm
+          key: spm-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('**/Package.resolved', 'AmakaFlowCompanion/AmakaFlowCompanion.xcodeproj/project.pbxproj') }}
+          restore-keys: |
+            spm-${{ runner.os }}-${{ steps.xcode.outputs.version }}-
+
+      - name: Restore DerivedData cache
+        uses: actions/cache@v4
+        with:
+          path: AmakaFlowCompanion/DerivedData
+          key: deriveddata-watchos-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('AmakaFlowCompanion/AmakaFlowCompanion.xcodeproj/project.pbxproj', 'AmakaFlowCompanion/AmakaFlowWatch Watch App/**/*.swift') }}
+          restore-keys: |
+            deriveddata-watchos-${{ runner.os }}-${{ steps.xcode.outputs.version }}-
+
+      - name: Resolve SwiftPM dependencies
+        working-directory: AmakaFlowCompanion
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project AmakaFlowCompanion.xcodeproj \
+            -scheme AmakaFlowCompanion \
+            -derivedDataPath DerivedData \
+            -clonedSourcePackagesDirPath .spm
+
+      - name: Build watchOS tests
+        working-directory: AmakaFlowCompanion
+        run: |
+          xcodebuild build-for-testing \
+            -project AmakaFlowCompanion.xcodeproj \
+            -scheme AmakaFlowCompanion \
+            -destination "platform=watchOS Simulator,name=${{ steps.watch-simulator.outputs.name }}" \
+            -derivedDataPath DerivedData \
+            -clonedSourcePackagesDirPath .spm \
+            -parallelizeTargets \
+            -jobs $(sysctl -n hw.ncpu)
+
+      - name: Run watchOS unit tests
+        working-directory: AmakaFlowCompanion
+        run: |
+          set +e
+          xcodebuild test-without-building \
+            -project AmakaFlowCompanion.xcodeproj \
+            -scheme AmakaFlowCompanion \
+            -destination "platform=watchOS Simulator,name=${{ steps.watch-simulator.outputs.name }}" \
+            -derivedDataPath DerivedData \
+            -clonedSourcePackagesDirPath .spm \
+            -only-testing:"AmakaFlowWatch Watch AppTests" \
+            -resultBundlePath WatchTestResults-Unit \
+            -enableCodeCoverage NO 2>&1 | tee watch_unit_output.log
+          XCODE_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          if grep -q "TEST SUCCEEDED" watch_unit_output.log || grep -q "with 0 failures" watch_unit_output.log; then
+            exit 0
+          fi
+          exit $XCODE_EXIT
+
+      - name: Run watchOS UI tests
+        working-directory: AmakaFlowCompanion
+        run: |
+          set +e
+          xcodebuild test-without-building \
+            -project AmakaFlowCompanion.xcodeproj \
+            -scheme AmakaFlowCompanion \
+            -destination "platform=watchOS Simulator,name=${{ steps.watch-simulator.outputs.name }}" \
+            -derivedDataPath DerivedData \
+            -clonedSourcePackagesDirPath .spm \
+            -only-testing:"AmakaFlowWatch Watch AppUITests" \
+            -resultBundlePath WatchTestResults-UI \
+            -enableCodeCoverage NO 2>&1 | tee watch_ui_output.log
+          XCODE_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          if grep -q "TEST SUCCEEDED" watch_ui_output.log || grep -q "with 0 failures" watch_ui_output.log; then
+            exit 0
+          fi
+          exit $XCODE_EXIT
+
+      - name: Upload watchOS test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: watchos-test-results
+          path: |
+            AmakaFlowCompanion/WatchTestResults-Unit
+            AmakaFlowCompanion/WatchTestResults-UI
           retention-days: 7

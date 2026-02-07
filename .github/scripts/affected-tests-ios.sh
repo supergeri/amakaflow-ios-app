@@ -10,10 +10,13 @@
 #   NONE  - Skip tests (no relevant changes)
 #   space-separated test targets - Run specific tests
 #
+# Watch test targets are included when watch source files change.
+#
 # Usage:
 #   ./affected-tests-ios.sh [base_ref] [head_ref]
 #
 # Part of AMA-339: CI Optimization
+# Updated for AMA-553: watchOS test coverage
 
 set -euo pipefail
 
@@ -30,14 +33,28 @@ if echo "$CHANGED" | grep -E -q '(\.xcodeproj/|Package\.swift|Package\.resolved|
   exit 0
 fi
 
-# If no AmakaFlowCompanion source changes, skip tests
-if ! echo "$CHANGED" | grep -E -q '^AmakaFlowCompanion/(AmakaFlowCompanion|AmakaFlowCompanionTests)/.*\.swift$'; then
+# Check for iOS source changes
+IOS_CHANGED=false
+if echo "$CHANGED" | grep -E -q '^AmakaFlowCompanion/(AmakaFlowCompanion|AmakaFlowCompanionTests)/.*\.swift$'; then
+  IOS_CHANGED=true
+fi
+
+# Check for watchOS source changes (AMA-553)
+WATCH_CHANGED=false
+if echo "$CHANGED" | grep -E -q '^AmakaFlowCompanion/(AmakaFlowWatch Watch App|AmakaFlowWatch Watch AppTests|AmakaFlowWatch Watch AppUITests)/'; then
+  WATCH_CHANGED=true
+fi
+
+# If neither iOS nor watchOS sources changed, skip tests
+if [[ "$IOS_CHANGED" == "false" && "$WATCH_CHANGED" == "false" ]]; then
   echo "NONE"
   exit 0
 fi
 
 # Map changed Swift source files -> expected test class candidates
 TEST_PATTERNS=()
+
+# iOS source -> iOS test mapping
 while IFS= read -r f; do
   # Only map main sources (not test files themselves)
   if [[ "$f" =~ ^AmakaFlowCompanion/AmakaFlowCompanion/.*\.swift$ ]]; then
@@ -54,6 +71,13 @@ while IFS= read -r f; do
     fi
   fi
 done <<< "$CHANGED"
+
+# watchOS source -> watch test target mapping (AMA-553)
+# When watch app sources change, run all watch unit and UI tests
+if [[ "$WATCH_CHANGED" == "true" ]]; then
+  TEST_PATTERNS+=("AmakaFlowWatch Watch AppTests")
+  TEST_PATTERNS+=("AmakaFlowWatch Watch AppUITests")
+fi
 
 # Remove duplicates
 if [[ ${#TEST_PATTERNS[@]} -gt 0 ]]; then
