@@ -10,7 +10,8 @@
 #   NONE  - Skip tests (no relevant changes)
 #   space-separated test targets - Run specific tests
 #
-# Watch test targets are included when watch source files change.
+# watchOS tests are handled by the separate watchos-tests CI job.
+# This script only outputs iOS test targets.
 #
 # Usage:
 #   ./affected-tests-ios.sh [base_ref] [head_ref]
@@ -72,12 +73,10 @@ while IFS= read -r f; do
   fi
 done <<< "$CHANGED"
 
-# watchOS source -> watch test target mapping (AMA-553)
-# When watch app sources change, run all watch unit and UI tests
-if [[ "$WATCH_CHANGED" == "true" ]]; then
-  TEST_PATTERNS+=("AmakaFlowWatch Watch AppTests")
-  TEST_PATTERNS+=("AmakaFlowWatch Watch AppUITests")
-fi
+# watchOS tests are handled by the separate watchos-tests CI job (AMA-553).
+# This script only outputs iOS test targets for the ios-tests job.
+# Watch test target names contain spaces which break shell word-splitting
+# in the workflow's for-loop, so they must not be included here.
 
 # Remove duplicates
 if [[ ${#TEST_PATTERNS[@]} -gt 0 ]]; then
@@ -87,8 +86,14 @@ else
 fi
 
 if [[ ${#UNIQUE_TESTS[@]} -eq 0 ]]; then
-  # No obvious mapped tests found -> safer fallback
-  echo "FULL"
+  if [[ "$IOS_CHANGED" == "true" ]]; then
+    # iOS sources changed but no mapped test found -> safer fallback
+    echo "FULL"
+  else
+    # Only watchOS sources changed -> no iOS tests needed
+    # (watchOS tests are handled by the separate watchos-tests job)
+    echo "NONE"
+  fi
   exit 0
 fi
 

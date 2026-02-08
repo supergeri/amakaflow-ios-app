@@ -227,7 +227,9 @@ jobs:
       - name: Determine watch simulator (first available Apple Watch)
         id: watch-simulator
         run: |
-          NAME=$(xcrun simctl list devices available | grep -o 'Apple Watch [^(]*' | head -1 | sed 's/ *$//')
+          # Apple Watch names include size in parens, e.g. "Apple Watch Series 10 (46mm)"
+          # Extract full name up to the UUID pattern
+          NAME=$(xcrun simctl list devices available | grep 'Apple Watch' | head -1 | sed -E 's/^[[:space:]]*//' | sed -E 's/ \([0-9A-F]{8}-.*$//')
           if [ -z "$NAME" ]; then
             echo "No available Apple Watch simulator found" >&2
             xcrun simctl list devices available
