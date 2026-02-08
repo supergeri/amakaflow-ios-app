@@ -276,9 +276,10 @@ jobs:
             -jobs $(sysctl -n hw.ncpu)
 
       # -----------------------------
-      # Run watchOS unit tests
+      # Run watchOS tests (unit + UI in single invocation)
+      # Separate invocations cause simulator state loss for UI test runner
       # -----------------------------
-      - name: Run watchOS unit tests
+      - name: Run watchOS tests
         working-directory: AmakaFlowCompanion
         run: |
           set +e
@@ -289,38 +290,14 @@ jobs:
             -derivedDataPath DerivedData \
             -clonedSourcePackagesDirPath .spm \
             -only-testing:"AmakaFlowWatch Watch AppTests" \
-            -resultBundlePath WatchTestResults-Unit \
-            -enableCodeCoverage NO 2>&1 | tee watch_unit_output.log
-          XCODE_EXIT=${PIPESTATUS[0]}
-          set -e
-
-          if grep -q "TEST SUCCEEDED" watch_unit_output.log || grep -q "with 0 failures" watch_unit_output.log; then
-            echo "watchOS unit tests passed!"
-            exit 0
-          fi
-          exit $XCODE_EXIT
-
-      # -----------------------------
-      # Run watchOS UI tests
-      # -----------------------------
-      - name: Run watchOS UI tests
-        working-directory: AmakaFlowCompanion
-        run: |
-          set +e
-          xcodebuild test-without-building \
-            -project AmakaFlowCompanion.xcodeproj \
-            -scheme "AmakaFlowWatch Watch App" \
-            -destination "platform=watchOS Simulator,name=${{ steps.watch-simulator.outputs.name }}" \
-            -derivedDataPath DerivedData \
-            -clonedSourcePackagesDirPath .spm \
             -only-testing:"AmakaFlowWatch Watch AppUITests" \
-            -resultBundlePath WatchTestResults-UI \
-            -enableCodeCoverage NO 2>&1 | tee watch_ui_output.log
+            -resultBundlePath WatchTestResults \
+            -enableCodeCoverage NO 2>&1 | tee watch_output.log
           XCODE_EXIT=${PIPESTATUS[0]}
           set -e
 
-          if grep -q "TEST SUCCEEDED" watch_ui_output.log || grep -q "with 0 failures" watch_ui_output.log; then
-            echo "watchOS UI tests passed!"
+          if grep -q "TEST SUCCEEDED" watch_output.log || grep -q "with 0 failures" watch_output.log; then
+            echo "watchOS tests passed!"
             exit 0
           fi
           exit $XCODE_EXIT
@@ -330,7 +307,5 @@ jobs:
         if: always()
         with:
           name: watchos-test-results
-          path: |
-            AmakaFlowCompanion/WatchTestResults-Unit
-            AmakaFlowCompanion/WatchTestResults-UI
+          path: AmakaFlowCompanion/WatchTestResults
           retention-days: 7
