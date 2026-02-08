@@ -276,10 +276,12 @@ jobs:
             -jobs $(sysctl -n hw.ncpu)
 
       # -----------------------------
-      # Run watchOS tests (unit + UI in single invocation)
-      # Separate invocations cause simulator state loss for UI test runner
+      # Run watchOS unit tests
+      # Note: watchOS UI tests (XCUITest) require the AX accessibility
+      # framework which doesn't work on CI watchOS simulators
+      # (kAXErrorCannotComplete). UI tests must be run locally.
       # -----------------------------
-      - name: Run watchOS tests
+      - name: Run watchOS unit tests
         working-directory: AmakaFlowCompanion
         run: |
           set +e
@@ -290,14 +292,13 @@ jobs:
             -derivedDataPath DerivedData \
             -clonedSourcePackagesDirPath .spm \
             -only-testing:"AmakaFlowWatch Watch AppTests" \
-            -only-testing:"AmakaFlowWatch Watch AppUITests" \
             -resultBundlePath WatchTestResults \
             -enableCodeCoverage NO 2>&1 | tee watch_output.log
           XCODE_EXIT=${PIPESTATUS[0]}
           set -e
 
           if grep -q "TEST SUCCEEDED" watch_output.log || grep -q "with 0 failures" watch_output.log; then
-            echo "watchOS tests passed!"
+            echo "watchOS unit tests passed!"
             exit 0
           fi
           exit $XCODE_EXIT

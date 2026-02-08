@@ -294,7 +294,10 @@ jobs:
             -parallelizeTargets \
             -jobs $(sysctl -n hw.ncpu)
 
-      - name: Run watchOS tests
+      # watchOS UI tests (XCUITest) require the AX accessibility framework
+      # which doesn't initialize on CI simulators (kAXErrorCannotComplete).
+      # Only unit tests run on CI; UI tests must be run locally.
+      - name: Run watchOS unit tests
         working-directory: AmakaFlowCompanion
         run: |
           set +e
@@ -305,7 +308,6 @@ jobs:
             -derivedDataPath DerivedData \
             -clonedSourcePackagesDirPath .spm \
             -only-testing:"AmakaFlowWatch Watch AppTests" \
-            -only-testing:"AmakaFlowWatch Watch AppUITests" \
             -resultBundlePath WatchTestResults \
             -enableCodeCoverage NO 2>&1 | tee watch_output.log
           XCODE_EXIT=${PIPESTATUS[0]}
