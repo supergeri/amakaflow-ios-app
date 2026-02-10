@@ -12,6 +12,7 @@ struct SourcesView: View {
     @State private var showingAppleWorkouts = false
     @State private var showingAIImport = false
     @State private var showingImageImport = false
+    @State private var showingInstagramImport = false
 
     var body: some View {
         NavigationStack {
@@ -30,6 +31,9 @@ struct SourcesView: View {
             .background(Theme.Colors.background.ignoresSafeArea())
             .navigationTitle("Sources")
             .navigationBarTitleDisplayMode(.large)
+            .sheet(isPresented: $showingInstagramImport) {
+                InstagramReelIngestionView(apiService: APIService.shared)
+            }
         }
     }
 
@@ -97,7 +101,7 @@ struct SourcesView: View {
                     subtitle: "Import from saved reels",
                     badge: "2 new",
                     badgeColor: Theme.Colors.accentOrange,
-                    action: {}
+                    action: { showingInstagramImport = true }
                 )
 
                 // TikTok
