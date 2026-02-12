@@ -10,10 +10,12 @@ import Sentry
 
 @main
 struct AmakaFlowCompanionApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var pairingService = PairingService.shared
     @StateObject private var workoutsViewModel: WorkoutsViewModel
     @StateObject private var watchConnectivity = WatchConnectivityManager.shared
     @StateObject private var garminConnectivity = GarminConnectManager.shared
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         // Note: E2E test auth bypass (AMA-232) is handled in PairingService.init()
@@ -71,6 +73,9 @@ struct AmakaFlowCompanionApp: App {
                         .environmentObject(garminConnectivity)
                         .environmentObject(pairingService)
                         .task {
+                            // Wire up ViewModel for AppDelegate silent push handler (AMA-567)
+                            appDelegate.workoutsViewModel = workoutsViewModel
+
                             // Load workouts from API
                             await workoutsViewModel.loadWorkouts()
 
@@ -108,6 +113,13 @@ struct AmakaFlowCompanionApp: App {
                 }
             }
             .preferredColorScheme(.dark) // Force dark mode
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active && pairingService.isPaired {
+                    Task {
+                        await workoutsViewModel.checkPendingWorkouts()
+                    }
+                }
+            }
         }
     }
 }
