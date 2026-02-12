@@ -10,6 +10,10 @@ import UserNotifications
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
+    /// Weak reference to the workouts view model, set by AmakaFlowCompanionApp on launch.
+    /// Used to await sync completion before calling the silent push completion handler.
+    weak var workoutsViewModel: WorkoutsViewModel?
+
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
@@ -77,10 +81,19 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     ) {
         print("[AppDelegate] Silent push received: \(userInfo)")
 
-        // Post notification to trigger workout sync
+        // Post notification for any foreground observers
         NotificationCenter.default.post(name: .refreshPendingWorkouts, object: nil, userInfo: userInfo)
 
-        completionHandler(.newData)
+        // Await the actual sync before telling iOS we're done,
+        // so the system doesn't suspend us mid-fetch
+        Task { @MainActor in
+            if let vm = self.workoutsViewModel {
+                await vm.checkPendingWorkouts()
+                completionHandler(.newData)
+            } else {
+                completionHandler(.noData)
+            }
+        }
     }
 }
 

@@ -73,6 +73,9 @@ struct AmakaFlowCompanionApp: App {
                         .environmentObject(garminConnectivity)
                         .environmentObject(pairingService)
                         .task {
+                            // Wire up ViewModel for AppDelegate silent push handler (AMA-567)
+                            appDelegate.workoutsViewModel = workoutsViewModel
+
                             // Load workouts from API
                             await workoutsViewModel.loadWorkouts()
 
